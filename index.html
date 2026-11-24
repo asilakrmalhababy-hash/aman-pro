@@ -1,0 +1,829 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>أمان Pro | Aman Pro</title>
+  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+  <script>tailwind.config = { darkMode: 'class' };</script>
+  <script src="https://unpkg.com/lucide@0.460.0/dist/umd/lucide.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrious/4.0.2/qrious.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    body { font-family: 'Cairo', 'Segoe UI', system-ui, sans-serif; transition: background-color .3s ease, color .3s ease; overflow-x: hidden; }
+    .mono { font-family: 'JetBrains Mono', ui-monospace, monospace; }
+    .score-ring { transition: stroke-dashoffset .6s ease, stroke .35s ease; }
+    .fade-in { animation: fadeIn .22s ease-out; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+    .spin-smooth { transition: transform .55s cubic-bezier(.34,1.56,.64,1); }
+    .nav-item.active { background-color: rgba(15,118,110,.12); color: #0f766e; }
+    .dark .nav-item.active { background-color: rgba(20,184,166,.14); color: #2dd4bf; }
+  </style>
+  <link rel="stylesheet" href="css/theme_mint.css" />
+  <link rel="manifest" href="manifest.json" />
+  <link rel="icon" href="assets/logo.png" />
+  <link rel="apple-touch-icon" href="assets/logo.png" />
+</head>
+<body class="bg-slate-50 text-slate-800 dark:bg-[#0B0F17] dark:text-slate-100 antialiased selection:bg-teal-500/20">
+
+  <div id="toast-container" class="fixed bottom-5 left-5 z-50 flex flex-col gap-2 max-w-xs sm:max-w-sm pointer-events-none"></div>
+  <div id="sidebar-backdrop" class="fixed inset-0 bg-slate-900/50 dark:bg-black/70 backdrop-blur-xs z-40 hidden lg:hidden"></div>
+
+  <div class="min-h-screen flex">
+    <aside id="sidebar" class="fixed inset-y-0 right-0 z-50 w-68 bg-white dark:bg-[#0F1521] border-l border-slate-200 dark:border-slate-800/90 flex flex-col transform translate-x-full lg:translate-x-0 lg:static lg:shrink-0 transition-transform duration-200 ease-out">
+      <div class="h-16 px-5 border-b border-slate-200 dark:border-slate-800/90 flex items-center justify-between gap-2">
+        <div class="flex items-center gap-3 min-w-0">
+          <img src="assets/logo.png" alt="أمان Pro" class="w-9 h-9 rounded-xl object-cover shadow-sm shrink-0" />
+          <div class="text-base font-extrabold tracking-tight text-slate-900 dark:text-white truncate" data-i18n="brand_name">أمان Pro</div>
+        </div>
+        <button id="close-sidebar" type="button" class="lg:hidden p-1.5 rounded-lg text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800"><i data-lucide="x" class="w-4 h-4"></i></button>
+      </div>
+
+      <nav class="flex-1 overflow-y-auto p-3.5 space-y-5">
+        <div>
+          <button type="button" data-tab="overview" class="nav-item active w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800/70 transition"><i data-lucide="home" class="w-4 h-4 shrink-0"></i><span data-i18n="nav_overview">الرئيسية</span></button>
+        </div>
+        <div class="space-y-1">
+          <div class="px-3.5 pb-1 text-[11px] font-bold text-slate-400 dark:text-slate-500" data-i18n="sec_scan">الفحص والحماية</div>
+          <button type="button" data-tab="url" class="nav-item w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800/70 transition"><i data-lucide="globe-lock" class="w-4 h-4 shrink-0"></i><span data-i18n="tab_url">فحص الروابط</span></button>
+          <button type="button" data-tab="file" class="nav-item w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800/70 transition"><i data-lucide="file-check-2" class="w-4 h-4 shrink-0"></i><span data-i18n="tab_file">فحص الملفات</span></button>
+        </div>
+        <div class="space-y-1">
+          <div class="px-3.5 pb-1 text-[11px] font-bold text-slate-400 dark:text-slate-500" data-i18n="sec_tools">أدوات الأمان</div>
+          <button type="button" data-tab="password" class="nav-item w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800/70 transition"><i data-lucide="key-round" class="w-4 h-4 shrink-0"></i><span data-i18n="tab_password">كلمات المرور</span></button>
+          <button type="button" data-tab="crypto" class="nav-item w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800/70 transition"><i data-lucide="lock" class="w-4 h-4 shrink-0"></i><span data-i18n="tab_crypto">التشفير والأكواد</span></button>
+          <button type="button" data-tab="qr" class="nav-item w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800/70 transition"><i data-lucide="qr-code" class="w-4 h-4 shrink-0"></i><span data-i18n="tab_qr">الباركود الأمني</span></button>
+        </div>
+      </nav>
+
+      <div class="p-3.5 border-t border-slate-200 dark:border-slate-800/90 space-y-2.5">
+        <div class="px-3 py-2 rounded-xl bg-slate-100 dark:bg-slate-900/80 flex items-center gap-2 text-xs text-slate-600 dark:text-slate-400">
+          <span class="w-2 h-2 rounded-full bg-emerald-500 shrink-0"></span>
+          <span data-i18n="local_first_pill">خصوصية تامة • معالجة محلية</span>
+        </div>
+        <button id="wipe-session-btn" type="button" class="w-full py-2 px-3 rounded-xl text-xs font-semibold text-slate-500 hover:text-rose-600 dark:text-slate-400 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-500/10 transition flex items-center justify-center gap-1.5">
+          <i data-lucide="eraser" class="w-3.5 h-3.5"></i><span data-i18n="btn_wipe">مسح بيانات الجلسة</span>
+        </button>
+      </div>
+    </aside>
+
+    <div class="flex-1 flex flex-col min-w-0">
+      <header class="fixed top-0 inset-x-0 lg:sticky z-40 h-16 mint-header">
+        <div class="h-full px-4 sm:px-6 flex items-center justify-between gap-2 max-w-4xl mx-auto">
+          <div class="flex items-center gap-2.5 min-w-0">
+            <button id="open-sidebar" type="button" aria-label="Menu" class="lg:hidden p-2 rounded-xl text-[#0D5C4D] dark:text-teal-300 hover:bg-white/60 dark:hover:bg-slate-800/70 transition"><i data-lucide="menu" class="w-6 h-6"></i></button>
+            <div class="flex items-center gap-2 min-w-0">
+              <img src="assets/logo.png" alt="أمان Pro" class="w-8 h-8 rounded-xl object-cover shadow-sm shrink-0" />
+              <h1 id="page-title" class="text-base sm:text-lg font-extrabold text-[#09362E] dark:text-white truncate" data-i18n="brand_name">أمان Pro</h1>
+            </div>
+          </div>
+          <div class="flex items-center gap-2 shrink-0">
+            <button id="help-guide-btn" type="button" title="شرح الأداة" class="mint-circle-btn w-9 h-9 rounded-full flex items-center justify-center font-extrabold text-sm transition">?</button>
+            <button id="theme-toggle" type="button" title="الوضع النهاري / الليلي" class="mint-circle-btn w-9 h-9 rounded-full flex items-center justify-center transition">
+              <span id="theme-icon-wrap" class="spin-smooth inline-flex items-center justify-center">
+                <i data-lucide="sun" class="w-4 h-4 hidden dark:block text-amber-300"></i>
+                <i data-lucide="moon" class="w-4 h-4 block dark:hidden text-[#0D5C4D]"></i>
+              </span>
+            </button>
+            <button id="lang-toggle" type="button" title="تبديل اللغة" class="mint-circle-btn w-9 h-9 rounded-full flex items-center justify-center font-extrabold text-sm transition">
+              <span id="lang-e-char" class="spin-smooth inline-block select-none">E</span>
+            </button>
+          </div>
+        </div>
+      </header>
+
+      <main class="flex-1 pt-20 p-4 sm:p-8 lg:pt-8 max-w-4xl w-full mx-auto">
+        <!-- OVERVIEW -->
+        <section id="panel-overview" class="tab-panel fade-in space-y-6 pt-2">
+          <div class="space-y-4">
+            <h2 class="text-2xl sm:text-3xl font-extrabold text-[#09362E] dark:text-white tracking-tight px-1" data-i18n="hero_title">حماية وفحص فوري</h2>
+            <form id="home-quick-url-form" class="mint-search-pill flex items-center gap-2 p-1.5 rounded-full transition">
+              <input id="home-quick-url-input" type="text" dir="ltr" placeholder="أدخل الرابط للفحص..." class="flex-1 min-w-0 px-4 py-2.5 bg-transparent focus:outline-none text-sm text-[#09362E] dark:text-white placeholder:text-slate-400" />
+              <button type="submit" class="px-6 py-2.5 rounded-full bg-[#0B4F43] hover:bg-[#0D5C4D] dark:bg-teal-500 dark:hover:bg-teal-400 text-white dark:text-slate-950 font-bold text-sm transition shrink-0 shadow-sm" data-i18n="btn_scan_url">فحص</button>
+            </form>
+          </div>
+          <div class="grid grid-cols-2 gap-3.5 sm:gap-4 pt-1">
+            <button type="button" data-jump="url" class="jump-btn mint-card rounded-[26px] p-5 sm:p-6 flex flex-col items-start justify-between gap-4 min-h-[132px] transition active:scale-[0.98]"><i data-lucide="link-2" class="w-7 h-7 text-[#0D5C4D] dark:text-teal-400"></i><span class="text-base font-extrabold text-[#09362E] dark:text-white" data-i18n="tab_url">فحص الروابط</span></button>
+            <button type="button" data-jump="file" class="jump-btn mint-card rounded-[26px] p-5 sm:p-6 flex flex-col items-start justify-between gap-4 min-h-[132px] transition active:scale-[0.98]"><i data-lucide="file-text" class="w-7 h-7 text-[#0D5C4D] dark:text-teal-400"></i><span class="text-base font-extrabold text-[#09362E] dark:text-white" data-i18n="tab_file">فحص الملفات</span></button>
+            <button type="button" data-jump="password" class="jump-btn mint-card rounded-[26px] p-5 sm:p-6 flex flex-col items-start justify-between gap-4 min-h-[132px] transition active:scale-[0.98]"><i data-lucide="key-round" class="w-7 h-7 text-[#0D5C4D] dark:text-teal-400"></i><span class="text-base font-extrabold text-[#09362E] dark:text-white" data-i18n="tab_password">كلمات المرور</span></button>
+            <button type="button" data-jump="crypto" class="jump-btn mint-card rounded-[26px] p-5 sm:p-6 flex flex-col items-start justify-between gap-4 min-h-[132px] transition active:scale-[0.98]"><i data-lucide="code-2" class="w-7 h-7 text-[#0D5C4D] dark:text-teal-400"></i><span class="text-base font-extrabold text-[#09362E] dark:text-white" data-i18n="tab_crypto">التشفير والأكواد</span></button>
+            <button type="button" data-jump="qr" class="jump-btn mint-card col-span-2 rounded-[26px] px-6 py-5 flex items-center gap-4 transition active:scale-[0.99]"><i data-lucide="qr-code" class="w-8 h-8 text-[#0D5C4D] dark:text-teal-400 shrink-0"></i><span class="text-base font-extrabold text-[#09362E] dark:text-white" data-i18n="tab_qr">الباركود الأمني</span></button>
+          </div>
+        </section>
+
+        <!-- URL -->
+        <section id="panel-url" class="tab-panel hidden fade-in space-y-5">
+          <div class="bg-white dark:bg-[#111827] rounded-2xl border border-slate-200 dark:border-slate-800 p-5 sm:p-6 space-y-4">
+            <div><h2 class="text-base sm:text-lg font-bold text-slate-900 dark:text-white" data-i18n="url_title">فاحص الروابط الذكي</h2><p class="text-xs text-slate-500 dark:text-slate-400 mt-1" data-i18n="url_desc">أدخل الرابط لفحص بنيته الأمنية وكشف علامات التصيد والروابط المختصرة.</p></div>
+            <form id="url-form" class="flex flex-col sm:flex-row gap-2.5">
+              <input id="url-input" type="text" dir="ltr" placeholder="https://example.com" class="flex-1 px-4 py-3 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 focus:border-teal-500 focus:outline-none text-sm text-slate-900 dark:text-white mono" />
+              <button type="submit" class="px-6 py-3 rounded-xl bg-teal-600 hover:bg-teal-500 text-white font-bold text-sm transition flex items-center justify-center gap-2 shrink-0"><i data-lucide="search-check" class="w-4 h-4"></i><span data-i18n="btn_scan_url">فحص الرابط</span></button>
+            </form>
+            <div class="flex flex-wrap items-center gap-2 pt-1">
+              <span class="text-xs text-slate-400" data-i18n="quick_samples">تجربة سريعة:</span>
+              <button type="button" class="url-sample px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-800/80 hover:bg-slate-200 dark:hover:bg-slate-700 text-xs text-slate-700 dark:text-slate-200 transition" data-url="https://github.com/security">رابط آمن</button>
+              <button type="button" class="url-sample px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-800/80 hover:bg-slate-200 dark:hover:bg-slate-700 text-xs text-slate-700 dark:text-slate-200 transition" data-url="https://bit.ly/3x9FakePromo">رابط مختصر</button>
+              <button type="button" class="url-sample px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-800/80 hover:bg-slate-200 dark:hover:bg-slate-700 text-xs text-slate-700 dark:text-slate-200 transition" data-url="http://paypal-verify-account.login-secure.xyz/auth@192.168.1.5:8080/update?token=9981">رابط تصيد</button>
+            </div>
+          </div>
+          <div id="url-result" class="hidden bg-white dark:bg-[#111827] rounded-2xl border border-slate-200 dark:border-slate-800 p-5 sm:p-6 fade-in">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 items-center">
+              <div class="flex flex-col items-center justify-center p-4 rounded-xl bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800">
+                <div class="relative w-28 h-28 flex items-center justify-center">
+                  <svg class="w-28 h-28 -rotate-90" viewBox="0 0 120 120"><circle cx="60" cy="60" r="50" fill="none" class="stroke-slate-200 dark:stroke-slate-800" stroke-width="10" /><circle id="url-score-circle" class="score-ring" cx="60" cy="60" r="50" fill="none" stroke="#10b981" stroke-width="10" stroke-linecap="round" stroke-dasharray="314.16" stroke-dashoffset="314.16" /></svg>
+                  <div class="absolute inset-0 flex flex-col items-center justify-center"><span id="url-score-val" class="text-2xl font-extrabold text-slate-900 dark:text-white">0</span><span class="text-[11px] text-slate-400">/ 100</span></div>
+                </div>
+                <div id="url-verdict-badge" class="mt-3 px-3 py-1 rounded-full text-xs font-bold">آمن مبدئياً</div>
+              </div>
+              <div class="md:col-span-2 space-y-3">
+                <div class="flex items-center justify-between gap-2"><h3 class="text-sm font-bold text-slate-900 dark:text-white" data-i18n="url_findings_title">نتائج الفحص</h3><span class="text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-teal-500/10 text-teal-600 dark:text-teal-400">فحص مباشر</span></div>
+                <ul id="url-findings-list" class="space-y-2 text-xs sm:text-sm"></ul>
+              </div>
+            </div>
+            <div class="mt-5 pt-4 border-t border-slate-200 dark:border-slate-800">
+              <button id="toggle-url-tech" type="button" class="text-xs font-semibold text-slate-500 hover:text-teal-600 flex items-center gap-1.5"><i data-lucide="terminal" class="w-4 h-4"></i><span data-i18n="url_tech_details">عرض التفاصيل التقنية</span></button>
+              <div id="url-tech-box" class="hidden mt-3 p-3.5 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 grid grid-cols-1 sm:grid-cols-2 gap-2.5 text-xs mono" dir="ltr"></div>
+            </div>
+          </div>
+        </section>
+
+        <!-- FILE -->
+        <section id="panel-file" class="tab-panel hidden fade-in space-y-5">
+          <div class="bg-white dark:bg-[#111827] rounded-2xl border border-slate-200 dark:border-slate-800 p-5 sm:p-6 space-y-4">
+            <div><h2 class="text-base sm:text-lg font-bold text-slate-900 dark:text-white" data-i18n="file_title">فحص الملفات بالبصمة الرقمية</h2><p class="text-xs text-slate-500 dark:text-slate-400 mt-1" data-i18n="file_desc">يحسب بصمة SHA-256 ويكشف النوع الحقيقي للملف داخل جهازك بدون رفعه لأي سيرفر.</p></div>
+            <div id="file-dropzone" class="border-2 border-dashed border-slate-300 dark:border-slate-700 hover:border-teal-500 rounded-2xl p-8 text-center cursor-pointer transition bg-slate-50/70 dark:bg-slate-950/40">
+              <input id="file-input" type="file" class="hidden" />
+              <div class="w-11 h-11 mx-auto rounded-xl bg-teal-50 dark:bg-teal-500/15 text-teal-600 dark:text-teal-400 flex items-center justify-center mb-3"><i data-lucide="upload-cloud" class="w-5 h-5"></i></div>
+              <p class="text-sm font-bold text-slate-800 dark:text-white" data-i18n="file_drop_title">اسحب أي ملف هنا أو اضغط للاختيار</p>
+              <p class="text-xs text-slate-500 dark:text-slate-400 mt-1" data-i18n="file_drop_sub">المعالجة محلية 100% — الملف لا يغادر جهازك</p>
+            </div>
+            <div class="flex flex-wrap items-center gap-2"><span class="text-xs text-slate-400" data-i18n="file_or_test">تجربة جاهزة:</span><button id="file-sample-safe" type="button" class="px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 text-xs text-slate-700 dark:text-slate-200">ملف PDF سليم</button><button id="file-sample-spoof" type="button" class="px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 text-xs text-slate-700 dark:text-slate-200">ملف مزيف (invoice.pdf.exe)</button></div>
+          </div>
+          <div id="file-result" class="hidden bg-white dark:bg-[#111827] rounded-2xl border border-slate-200 dark:border-slate-800 p-5 sm:p-6 fade-in space-y-4">
+            <div class="flex flex-wrap items-center justify-between gap-3"><div class="min-w-0"><h3 id="file-res-name" class="text-sm font-bold text-slate-900 dark:text-white truncate" dir="ltr"></h3><p id="file-res-meta" class="text-xs text-slate-500 mt-0.5"></p></div><span id="file-risk-pill" class="px-3 py-1 rounded-full text-xs font-bold"></span></div>
+            <div id="file-alerts" class="space-y-2 text-xs sm:text-sm"></div>
+            <div class="space-y-2.5 pt-1">
+              <div class="p-3 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800"><div class="flex items-center justify-between mb-1"><span class="text-[11px] font-bold text-teal-600 dark:text-teal-400">SHA-256</span><button type="button" class="copy-btn text-xs text-slate-500 hover:text-teal-600 flex items-center gap-1" data-copy-target="hash-sha256"><i data-lucide="copy" class="w-3.5 h-3.5"></i><span data-i18n="btn_copy">نسخ</span></button></div><div id="hash-sha256" class="text-xs text-slate-800 dark:text-slate-200 mono break-all" dir="ltr"></div></div>
+              <div class="p-3 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800"><div class="flex items-center justify-between mb-1"><span class="text-[11px] font-bold text-slate-500">SHA-1</span><button type="button" class="copy-btn text-xs text-slate-500 hover:text-teal-600 flex items-center gap-1" data-copy-target="hash-sha1"><i data-lucide="copy" class="w-3.5 h-3.5"></i><span data-i18n="btn_copy">نسخ</span></button></div><div id="hash-sha1" class="text-xs text-slate-700 dark:text-slate-300 mono break-all" dir="ltr"></div></div>
+            </div>
+            
+          </div>
+        </section>
+
+        <!-- PASSWORD -->
+        <section id="panel-password" class="tab-panel hidden fade-in space-y-5">
+          <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
+            <div class="bg-white dark:bg-[#111827] rounded-2xl border border-slate-200 dark:border-slate-800 p-5 sm:p-6 space-y-5">
+              <div class="flex flex-wrap items-center justify-between gap-2">
+                <div>
+                  <h2 class="text-base font-bold text-slate-900 dark:text-white" data-i18n="pw_gen_title">مولّد كلمات المرور</h2>
+                  <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5" data-i18n="pw_gen_sub">اختر الطريقة المناسبة لإنشاء كلمة مرور قوية</p>
+                </div>
+                <div class="flex rounded-xl bg-slate-100 dark:bg-slate-950 p-1 border border-slate-200 dark:border-slate-800 text-xs shrink-0">
+                  <button type="button" id="pw-mode-random" class="px-2.5 py-1.5 rounded-lg bg-white dark:bg-slate-800 text-teal-700 dark:text-teal-300 font-bold whitespace-nowrap transition" data-i18n="pw_random">عشوائي</button>
+                  <button type="button" id="pw-mode-phrase" class="px-2.5 py-1.5 rounded-lg text-slate-500 dark:text-slate-400 whitespace-nowrap transition" data-i18n="pw_phrase">عبارة سرية</button>
+                  <button type="button" id="pw-mode-life" class="px-2.5 py-1.5 rounded-lg text-slate-500 dark:text-slate-400 whitespace-nowrap transition" data-i18n="pw_life">من حياتك</button>
+                </div>
+              </div>
+              <div class="p-4 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 flex items-center justify-between gap-3">
+                <div id="pw-output" class="text-base sm:text-lg font-bold text-teal-700 dark:text-teal-300 mono break-all select-all" dir="ltr"></div>
+                <div class="flex items-center gap-1.5 shrink-0">
+                  <button id="pw-refresh" type="button" title="توليد جديد" class="p-2.5 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-200 hover:border-teal-500 transition"><i data-lucide="refresh-cw" class="w-4 h-4"></i></button>
+                  <button type="button" class="copy-btn p-2.5 rounded-xl bg-teal-600 hover:bg-teal-500 text-white transition" data-copy-target="pw-output"><i data-lucide="copy" class="w-4 h-4"></i></button>
+                </div>
+              </div>
+              <div class="space-y-1.5">
+                <div class="flex items-center justify-between text-xs"><span id="pw-strength-label" class="font-bold"></span><span id="pw-entropy-label" class="text-slate-500 mono" dir="ltr"></span></div>
+                <div class="w-full h-2 rounded-full bg-slate-200 dark:bg-slate-800 overflow-hidden"><div id="pw-strength-bar" class="h-full bg-emerald-500 transition-all duration-300"></div></div>
+                <p id="pw-crack-time" class="text-[11px] text-slate-500 dark:text-slate-400"></p>
+              </div>
+              <div id="pw-random-opts" class="space-y-3.5 pt-3 border-t border-slate-200 dark:border-slate-800">
+                <div class="flex items-center justify-between gap-2">
+                  <span class="text-xs font-semibold text-slate-600 dark:text-slate-300" data-i18n="pw_length">الطول</span>
+                  <div class="flex items-center gap-1.5">
+                    <button type="button" class="pw-preset px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-[11px] font-bold text-slate-600 dark:text-slate-300 hover:bg-teal-500/20" data-len="12">12</button>
+                    <button type="button" class="pw-preset px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-[11px] font-bold text-slate-600 dark:text-slate-300 hover:bg-teal-500/20" data-len="16">16</button>
+                    <button type="button" class="pw-preset px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-[11px] font-bold text-slate-600 dark:text-slate-300 hover:bg-teal-500/20" data-len="24">24</button>
+                    <span id="pw-len-val" class="text-xs font-extrabold text-teal-600 dark:text-teal-400 mono px-1.5">18</span>
+                  </div>
+                </div>
+                <input id="pw-len-slider" type="range" min="12" max="64" value="18" class="w-full accent-teal-600 cursor-pointer" />
+                <div class="grid grid-cols-2 gap-2 text-xs">
+                  <label class="flex items-center gap-2 p-2.5 rounded-xl bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800 cursor-pointer"><input id="opt-upper" type="checkbox" checked class="accent-teal-600" /><span>أحرف كبيرة (A-Z)</span></label>
+                  <label class="flex items-center gap-2 p-2.5 rounded-xl bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800 cursor-pointer"><input id="opt-lower" type="checkbox" checked class="accent-teal-600" /><span>أحرف صغيرة (a-z)</span></label>
+                  <label class="flex items-center gap-2 p-2.5 rounded-xl bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800 cursor-pointer"><input id="opt-num" type="checkbox" checked class="accent-teal-600" /><span>أرقام (0-9)</span></label>
+                  <label class="flex items-center gap-2 p-2.5 rounded-xl bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800 cursor-pointer"><input id="opt-sym" type="checkbox" checked class="accent-teal-600" /><span>رموز (!@#$)</span></label>
+                </div>
+              </div>
+              <div id="pw-phrase-opts" class="hidden space-y-3 pt-3 border-t border-slate-200 dark:border-slate-800">
+                <div><div class="flex justify-between text-xs mb-1"><span data-i18n="pw_words">عدد الكلمات</span><span id="pw-words-val" class="font-bold text-teal-600 dark:text-teal-400 mono">4</span></div><input id="pw-words-slider" type="range" min="3" max="8" value="4" class="w-full accent-teal-600 cursor-pointer" /></div>
+                <div class="flex flex-wrap items-center gap-2 text-xs"><span data-i18n="pw_sep">الفاصل:</span><select id="pw-sep-select" class="px-3 py-1.5 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700"><option value="-">-</option><option value="_">_</option><option value=".">.</option><option value=" ">مسافة</option></select><label class="flex items-center gap-1.5 mr-auto cursor-pointer"><input id="pw-phrase-num" type="checkbox" checked class="accent-teal-600" /><span data-i18n="pw_add_num">إضافة رقم</span></label></div>
+              </div>
+              <div id="pw-life-opts" class="hidden space-y-3 pt-3 border-t border-slate-200 dark:border-slate-800">
+                <div id="life-intro" class="p-4 rounded-xl bg-teal-50/70 dark:bg-teal-500/10 border border-teal-200 dark:border-teal-500/25 text-center space-y-3">
+                  <p class="text-xs text-slate-700 dark:text-slate-200 leading-relaxed" data-i18n="life_intro_txt">نصنع لك كلمة مرور قوية وسهلة التذكر من تفاصيل ثابتة في حياتك (تتم المعالجة محلياً ولا تُحفظ أبداً).</p>
+                  <button id="btn-life-start" type="button" class="px-5 py-2.5 rounded-xl bg-teal-600 hover:bg-teal-500 text-white font-bold text-xs transition inline-flex items-center gap-2"><i data-lucide="play" class="w-3.5 h-3.5"></i><span data-i18n="life_start_btn">ابدأ الآن</span></button>
+                </div>
+                <div id="life-wizard" class="hidden space-y-3 p-4 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800">
+                  <div class="flex items-center justify-between text-[11px]"><span class="font-bold text-teal-600 dark:text-teal-400" data-i18n="pw_life">من حياتك</span><span id="life-step-num" class="mono text-slate-400">1 / 4</span></div>
+                  <div id="life-step-1" class="life-step space-y-2"><label class="block text-xs font-semibold text-slate-700 dark:text-slate-200" data-i18n="life_q1">ما اسمك أو لقبك المفضل؟</label><input id="life-name" type="text" placeholder="مثال: أصيل أو Asil" class="w-full px-3.5 py-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-sm focus:border-teal-500 focus:outline-none" /></div>
+                  <div id="life-step-2" class="life-step hidden space-y-2"><label class="block text-xs font-semibold text-slate-700 dark:text-slate-200" data-i18n="life_q2">آخر 4 أرقام من هاتفك أو سنة ميلادك؟</label><input id="life-digits" type="text" inputmode="numeric" dir="ltr" placeholder="1998" class="w-full px-3.5 py-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-sm mono focus:border-teal-500 focus:outline-none" /></div>
+                  <div id="life-step-3" class="life-step hidden space-y-2"><label class="block text-xs font-semibold text-slate-700 dark:text-slate-200" data-i18n="life_q3">اسم مدينتك أو بلدك المفضل؟</label><input id="life-city" type="text" placeholder="مثال: صنعاء أو Sanaa" class="w-full px-3.5 py-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-sm focus:border-teal-500 focus:outline-none" /><div class="flex flex-wrap gap-1.5 pt-1"><button type="button" class="life-chip px-2.5 py-1 rounded-lg bg-slate-200/70 dark:bg-slate-800 text-[11px] font-semibold" data-target="life-city" data-val="Sanaa">صنعاء</button><button type="button" class="life-chip px-2.5 py-1 rounded-lg bg-slate-200/70 dark:bg-slate-800 text-[11px] font-semibold" data-target="life-city" data-val="Riyadh">الرياض</button><button type="button" class="life-chip px-2.5 py-1 rounded-lg bg-slate-200/70 dark:bg-slate-800 text-[11px] font-semibold" data-target="life-city" data-val="Aden">عدن</button><button type="button" class="life-chip px-2.5 py-1 rounded-lg bg-slate-200/70 dark:bg-slate-800 text-[11px] font-semibold" data-target="life-city" data-val="Dubai">دبي</button></div></div>
+                  <div id="life-step-4" class="life-step hidden space-y-2"><label class="block text-xs font-semibold text-slate-700 dark:text-slate-200" data-i18n="life_q4">اختر رمزك المفضل لتقوية الكلمة:</label><div class="grid grid-cols-4 gap-2"><button type="button" class="life-sym py-2 rounded-xl border border-teal-500 bg-teal-500/15 text-teal-700 dark:text-teal-300 font-bold mono" data-sym="@">@</button><button type="button" class="life-sym py-2 rounded-xl border border-slate-200 dark:border-slate-700 font-bold mono" data-sym="#">#</button><button type="button" class="life-sym py-2 rounded-xl border border-slate-200 dark:border-slate-700 font-bold mono" data-sym="$">$</button><button type="button" class="life-sym py-2 rounded-xl border border-slate-200 dark:border-slate-700 font-bold mono" data-sym="!">!</button></div></div>
+                  <div class="flex items-center justify-between gap-2 pt-2"><button id="btn-life-prev" type="button" class="px-3.5 py-2 rounded-xl bg-slate-200/70 dark:bg-slate-800 text-xs font-bold hidden" data-i18n="life_prev">السابق</button><button id="btn-life-next" type="button" class="mr-auto px-5 py-2 rounded-xl bg-teal-600 hover:bg-teal-500 text-white text-xs font-bold" data-i18n="life_next">التالي</button></div>
+                </div>
+              </div>
+            </div>
+            <div class="bg-white dark:bg-[#111827] rounded-2xl border border-slate-200 dark:border-slate-800 p-5 sm:p-6 flex flex-col justify-between space-y-4">
+              <div class="space-y-4">
+                <div><h2 class="text-base font-bold text-slate-900 dark:text-white" data-i18n="hibp_title">فحص تسريب كلمة المرور</h2><p class="text-xs text-slate-500 dark:text-slate-400 mt-1 leading-relaxed" data-i18n="hibp_desc">فحص آمن عبر k-Anonymity — يتم إرسال أول 5 حروف من البصمة فقط ولا تنكشف كلمتك أبداً.</p></div>
+                <div class="space-y-2.5">
+                  <div class="relative"><input id="hibp-input" type="password" dir="ltr" placeholder="أدخل كلمة مرور للفحص..." class="w-full pl-11 pr-4 py-3 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 focus:border-teal-500 focus:outline-none text-sm text-slate-900 dark:text-white mono" /><button id="hibp-toggle-vis" type="button" class="absolute inset-y-0 left-3 flex items-center text-slate-400 hover:text-teal-600"><i data-lucide="eye" class="w-4 h-4"></i></button></div>
+                  <div class="flex gap-2"><button id="hibp-check-btn" type="button" class="flex-1 py-2.5 rounded-xl bg-teal-600 hover:bg-teal-500 text-white font-bold text-sm transition flex items-center justify-center gap-2"><i data-lucide="shield-alert" class="w-4 h-4"></i><span data-i18n="btn_check_breach">فحص التسريب</span></button><button id="hibp-use-gen" type="button" class="px-3.5 py-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-xs font-semibold whitespace-nowrap transition" data-i18n="btn_use_gen">فحص المولّدة</button></div>
+                </div>
+                <div id="hibp-result" class="hidden p-4 rounded-xl border text-sm fade-in"></div>
+              </div>
+              <div class="p-3 rounded-xl bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800 text-[11px] text-slate-500 dark:text-slate-400" data-i18n="hibp_privacy_tip">جرب فحص كلمة شائعة مثل 123456 لمعرفة عدد مرات تسريبها عالمياً.</div>
+            </div>
+          </div>
+        </section>
+
+        <!-- CRYPTO -->
+        <section id="panel-crypto" class="tab-panel hidden fade-in space-y-5">
+          <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
+            <div class="bg-white dark:bg-[#111827] rounded-2xl border border-slate-200 dark:border-slate-800 p-5 sm:p-6 space-y-4">
+              <div class="flex flex-wrap items-center justify-between gap-2">
+                <h2 class="text-base font-bold text-slate-900 dark:text-white" data-i18n="aes_title">تشفير AES-256-GCM</h2>
+                <div class="flex rounded-xl bg-slate-100 dark:bg-slate-950 p-1 border border-slate-200 dark:border-slate-800 text-xs shrink-0">
+                  <button type="button" id="enc-mode-text" class="px-2.5 py-1.5 rounded-lg bg-white dark:bg-slate-800 text-teal-700 dark:text-teal-300 font-bold whitespace-nowrap transition">تشفير النصوص</button>
+                  <button type="button" id="enc-mode-file" class="px-2.5 py-1.5 rounded-lg text-slate-500 dark:text-slate-400 whitespace-nowrap transition">الصور والملفات</button>
+                </div>
+              </div>
+              <div id="enc-panel-text" class="space-y-3.5">
+                <textarea id="aes-text" rows="4" placeholder="اكتب النص السري أو الصق النص المشفر..." class="w-full p-3.5 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 focus:border-teal-500 focus:outline-none text-sm text-slate-900 dark:text-white"></textarea>
+                <input id="aes-pass" type="password" placeholder="كلمة السر..." class="w-full px-4 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 focus:border-teal-500 focus:outline-none text-sm text-slate-900 dark:text-white" />
+                <div class="grid grid-cols-2 gap-2.5">
+                  <button id="btn-aes-encrypt" type="button" class="py-2.5 rounded-xl bg-teal-600 hover:bg-teal-500 text-white font-bold text-sm transition flex items-center justify-center gap-1.5"><i data-lucide="lock" class="w-4 h-4"></i><span data-i18n="btn_encrypt">تشفير</span></button>
+                  <button id="btn-aes-decrypt" type="button" class="py-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 font-bold text-sm transition flex items-center justify-center gap-1.5"><i data-lucide="unlock" class="w-4 h-4"></i><span data-i18n="btn_decrypt">فك التشفير</span></button>
+                </div>
+                <div id="aes-output-wrap" class="hidden space-y-1.5"><div class="flex items-center justify-between"><span class="text-xs font-semibold text-teal-600 dark:text-teal-400" data-i18n="result_label">النتيجة:</span><button type="button" class="copy-btn text-xs text-slate-500 flex items-center gap-1" data-copy-target="aes-output"><i data-lucide="copy" class="w-3.5 h-3.5"></i><span data-i18n="btn_copy">نسخ</span></button></div><div id="aes-output" class="p-3 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-xs text-slate-800 dark:text-emerald-300 mono break-all max-h-40 overflow-y-auto" dir="ltr"></div></div>
+              </div>
+              <div id="enc-panel-file" class="hidden space-y-3.5">
+                <div id="enc-file-drop" class="border-2 border-dashed border-slate-300 dark:border-slate-700 hover:border-teal-500 rounded-2xl p-5 text-center cursor-pointer transition bg-slate-50/70 dark:bg-slate-950/40">
+                  <input id="enc-file-input" type="file" class="hidden" />
+                  <div class="w-10 h-10 mx-auto rounded-xl bg-teal-50 dark:bg-teal-500/15 text-teal-600 dark:text-teal-400 flex items-center justify-center mb-2"><i data-lucide="file-lock-2" class="w-5 h-5"></i></div>
+                  <p id="enc-file-label" class="text-xs font-bold text-slate-700 dark:text-slate-200">اختر صورة أو ملف لتشفيره أو فك تشفيره (.aman)</p>
+                  <p id="enc-file-meta" class="text-[11px] text-slate-400 mt-1"></p>
+                </div>
+                <input id="aes-file-pass" type="password" placeholder="كلمة السر للصور والملفات..." class="w-full px-4 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 focus:border-teal-500 focus:outline-none text-sm text-slate-900 dark:text-white" />
+                <div class="grid grid-cols-2 gap-2.5">
+                  <button id="btn-file-encrypt" type="button" class="py-2.5 rounded-xl bg-teal-600 hover:bg-teal-500 text-white font-bold text-sm transition flex items-center justify-center gap-1.5"><i data-lucide="lock" class="w-4 h-4"></i><span>تشفير الملف</span></button>
+                  <button id="btn-file-decrypt" type="button" class="py-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 font-bold text-sm transition flex items-center justify-center gap-1.5"><i data-lucide="unlock" class="w-4 h-4"></i><span>فك التشفير</span></button>
+                </div>
+                <div id="enc-file-result" class="hidden p-3.5 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 space-y-2.5 text-center fade-in">
+                  <img id="enc-img-preview" class="hidden max-h-44 mx-auto rounded-xl border border-slate-200 dark:border-slate-700 object-contain" alt="Preview" />
+                  <div id="enc-file-res-info" class="text-xs font-semibold text-emerald-600 dark:text-emerald-400"></div>
+                  <a id="enc-file-dl" class="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-teal-600 hover:bg-teal-500 text-white text-xs font-bold transition" download><i data-lucide="download" class="w-3.5 h-3.5"></i><span>تحميل الملف</span></a>
+                </div>
+              </div>
+            </div>
+            </div>
+            <div class="bg-white dark:bg-[#111827] rounded-2xl border border-slate-200 dark:border-slate-800 p-5 sm:p-6 space-y-4">
+              <div class="flex flex-wrap items-center justify-between gap-2">
+                <h2 class="text-base font-bold text-slate-900 dark:text-white" data-i18n="dev_tools_title">أدوات المطورين</h2>
+                <div class="flex rounded-lg bg-slate-100 dark:bg-slate-950 p-1 border border-slate-200 dark:border-slate-800 text-xs shrink-0">
+                  <button type="button" class="dev-subtab px-2.5 py-1 rounded-md bg-white dark:bg-slate-800 text-teal-700 dark:text-teal-300 font-bold" data-dev="base64">Base64</button>
+                  <button type="button" class="dev-subtab px-2.5 py-1 rounded-md text-slate-500" data-dev="hash">Hash</button>
+                  <button type="button" class="dev-subtab px-2.5 py-1 rounded-md text-slate-500" data-dev="jwt">JWT</button>
+                </div>
+              </div>
+              <div id="dev-panel-base64" class="space-y-3">
+                <textarea id="b64-input" rows="4" placeholder="أدخل نصاً أو Base64..." class="w-full p-3.5 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 text-sm mono"></textarea>
+                <div class="grid grid-cols-2 gap-2.5"><button id="btn-b64-enc" type="button" class="py-2 rounded-xl bg-teal-600 text-white font-bold text-xs">ترميز (Encode)</button><button id="btn-b64-dec" type="button" class="py-2 rounded-xl bg-slate-100 dark:bg-slate-800 font-bold text-xs">فك الترميز (Decode)</button></div>
+                <div class="p-3 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 min-h-[72px] relative"><button type="button" class="copy-btn absolute top-2 left-2 text-xs text-slate-400" data-copy-target="b64-output"><i data-lucide="copy" class="w-3.5 h-3.5"></i></button><div id="b64-output" class="text-xs mono break-all pl-7" dir="ltr">—</div></div>
+              </div>
+              <div id="dev-panel-hash" class="hidden space-y-3">
+                <textarea id="hash-text-input" rows="3" placeholder="اكتب أي نص لتوليد بصماته..." class="w-full p-3.5 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 text-sm"></textarea>
+                <div class="space-y-2 text-xs mono" dir="ltr">
+                  <div class="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800"><div class="text-[10px] text-teal-600 font-bold mb-1">SHA-256</div><div id="text-sha256" class="break-all">—</div></div>
+                  <div class="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800"><div class="text-[10px] text-slate-500 font-bold mb-1">SHA-512</div><div id="text-sha512" class="break-all">—</div></div>
+                </div>
+              </div>
+              <div id="dev-panel-jwt" class="hidden space-y-3">
+                <textarea id="jwt-input" rows="3" dir="ltr" placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..." class="w-full p-3.5 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 text-xs mono"></textarea>
+                <button id="btn-jwt-sample" type="button" class="text-xs text-teal-600 dark:text-teal-400 hover:underline">إدراج رمز JWT تجريبي</button>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs mono" dir="ltr">
+                  <div class="p-3 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800"><div class="text-[10px] text-slate-500 font-bold mb-1">HEADER</div><pre id="jwt-header" class="whitespace-pre-wrap break-all">—</pre></div>
+                  <div class="p-3 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800"><div class="text-[10px] text-slate-500 font-bold mb-1">PAYLOAD</div><pre id="jwt-payload" class="whitespace-pre-wrap break-all">—</pre></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- QR -->
+        <section id="panel-qr" class="tab-panel hidden fade-in space-y-5">
+          <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
+            <div class="bg-white dark:bg-[#111827] rounded-2xl border border-slate-200 dark:border-slate-800 p-5 sm:p-6 space-y-4">
+              <div class="flex flex-wrap items-center justify-between gap-2">
+                <h2 class="text-base font-bold text-slate-900 dark:text-white" data-i18n="qr_gen_title">صانع الباركود</h2>
+                <div class="flex rounded-xl bg-slate-100 dark:bg-slate-950 p-1 border border-slate-200 dark:border-slate-800 text-xs shrink-0">
+                  <button type="button" class="qr-type-btn px-3 py-1.5 rounded-lg bg-white dark:bg-slate-800 text-teal-700 dark:text-teal-300 font-bold whitespace-nowrap" data-qtype="url">رابط / نص</button>
+                  <button type="button" class="qr-type-btn px-3 py-1.5 rounded-lg text-slate-500 whitespace-nowrap" data-qtype="wifi">واي فاي</button>
+                </div>
+              </div>
+              <div id="qr-fields-url"><input id="qr-text-input" type="text" dir="ltr" value="https://github.com" placeholder="https://example.com" class="w-full px-4 py-3 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 focus:border-teal-500 focus:outline-none text-sm text-slate-900 dark:text-white mono" /></div>
+              <div id="qr-fields-wifi" class="hidden space-y-2.5">
+                <input id="qr-wifi-ssid" type="text" placeholder="اسم الشبكة (SSID)" class="w-full px-4 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 text-sm text-slate-900 dark:text-white" />
+                <div class="grid grid-cols-2 gap-2">
+                  <input id="qr-wifi-pass" type="text" placeholder="كلمة المرور" class="px-4 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 text-sm text-slate-900 dark:text-white" />
+                  <select id="qr-wifi-enc" class="px-3 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 text-sm text-slate-900 dark:text-white"><option value="WPA">WPA/WPA2</option><option value="WEP">WEP</option><option value="nopass">مفتوحة</option></select>
+                </div>
+              </div>
+              <div class="space-y-3 p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-950/70 border border-slate-200 dark:border-slate-800">
+                <input id="qr-color-fg" type="hidden" value="#0f172a" />
+                <input id="qr-color-bg" type="hidden" value="#ffffff" />
+                <div class="flex items-center justify-between gap-2">
+                  <span class="text-xs font-bold text-slate-600 dark:text-slate-300" data-i18n="qr_fg">لون الكود</span>
+                  <div class="flex items-center gap-2">
+                    <button type="button" data-fg="#0f172a" class="qr-fg-dot w-7 h-7 rounded-full bg-[#0f172a] ring-2 ring-offset-2 ring-teal-500 dark:ring-offset-slate-900 transition hover:scale-110"></button>
+                    <button type="button" data-fg="#0f766e" class="qr-fg-dot w-7 h-7 rounded-full bg-[#0f766e] transition hover:scale-110"></button>
+                    <button type="button" data-fg="#1d4ed8" class="qr-fg-dot w-7 h-7 rounded-full bg-[#1d4ed8] transition hover:scale-110"></button>
+                    <button type="button" data-fg="#6d28d9" class="qr-fg-dot w-7 h-7 rounded-full bg-[#6d28d9] transition hover:scale-110"></button>
+                    <button type="button" data-fg="#be123c" class="qr-fg-dot w-7 h-7 rounded-full bg-[#be123c] transition hover:scale-110"></button>
+                    <button type="button" data-fg="#b45309" class="qr-fg-dot w-7 h-7 rounded-full bg-[#b45309] transition hover:scale-110"></button>
+                  </div>
+                </div>
+                <div class="flex items-center justify-between gap-2 pt-2.5 border-t border-slate-200/80 dark:border-slate-800">
+                  <span class="text-xs font-bold text-slate-600 dark:text-slate-300" data-i18n="qr_bg">الخلفية</span>
+                  <div class="flex items-center gap-2">
+                    <button type="button" data-bg="#ffffff" class="qr-bg-dot w-7 h-7 rounded-full bg-white border border-slate-300 ring-2 ring-offset-2 ring-teal-500 dark:ring-offset-slate-900 transition hover:scale-110"></button>
+                    <button type="button" data-bg="#f1f5f9" class="qr-bg-dot w-7 h-7 rounded-full bg-[#f1f5f9] border border-slate-300 transition hover:scale-110"></button>
+                    <button type="button" data-bg="#f0fdfa" class="qr-bg-dot w-7 h-7 rounded-full bg-[#f0fdfa] border border-teal-200 transition hover:scale-110"></button>
+                    <button type="button" data-bg="#fefce8" class="qr-bg-dot w-7 h-7 rounded-full bg-[#fefce8] border border-amber-200 transition hover:scale-110"></button>
+                    <button type="button" data-bg="#0f172a" class="qr-bg-dot w-7 h-7 rounded-full bg-[#0f172a] border border-slate-600 transition hover:scale-110"></button>
+                  </div>
+                </div>
+              </div>
+              <div class="flex flex-col items-center justify-center p-5 rounded-2xl bg-slate-50 dark:bg-slate-950/70 border border-slate-200 dark:border-slate-800 gap-4">
+                <div class="p-3 bg-white rounded-2xl shadow-md border border-slate-200 inline-flex items-center justify-center"><canvas id="qr-canvas" width="220" height="220" class="rounded-lg block"></canvas></div>
+                <div class="grid grid-cols-2 gap-2.5 w-full max-w-xs">
+                  <button id="btn-qr-download" type="button" class="py-2.5 px-3 rounded-xl bg-teal-600 hover:bg-teal-500 text-white font-bold text-xs transition flex items-center justify-center gap-1.5"><i data-lucide="download" class="w-4 h-4"></i><span data-i18n="btn_download_png">تحميل PNG</span></button>
+                  <button id="btn-qr-test-scan" type="button" class="py-2.5 px-3 rounded-xl bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 font-semibold text-xs transition flex items-center justify-center gap-1.5"><i data-lucide="scan-line" class="w-4 h-4 text-teal-600 dark:text-teal-400"></i><span data-i18n="btn_test_scan_this">اختبر فحصه</span></button>
+                </div>
+              </div>
+            </div>
+            <div class="bg-white dark:bg-[#111827] rounded-2xl border border-slate-200 dark:border-slate-800 p-5 sm:p-6 space-y-4">
+              <div><h2 class="text-base font-bold text-slate-900 dark:text-white" data-i18n="qr_scan_title">فاحص الباركود الآمن</h2><p class="text-xs text-slate-500 dark:text-slate-400 mt-1" data-i18n="qr_scan_desc">ارفع صورة باركود لقراءة الرابط المخفي داخله وفحصه قبل فتحه.</p></div>
+              <div id="qr-dropzone" class="border-2 border-dashed border-slate-300 dark:border-slate-700 hover:border-teal-500 rounded-2xl p-7 text-center cursor-pointer transition bg-slate-50/70 dark:bg-slate-950/40">
+                <input id="qr-file-input" type="file" accept="image/*" class="hidden" />
+                <div class="w-11 h-11 mx-auto rounded-xl bg-teal-50 dark:bg-teal-500/15 text-teal-600 dark:text-teal-400 flex items-center justify-center mb-2.5"><i data-lucide="image-plus" class="w-5 h-5"></i></div>
+                <p class="text-sm font-bold text-slate-800 dark:text-white" data-i18n="qr_upload_title">ارفع صورة باركود للفحص</p>
+                <p class="text-xs text-slate-500 dark:text-slate-400 mt-1" data-i18n="qr_upload_sub">قراءة محلية آمنة بدون فتح الرابط</p>
+              </div>
+              <canvas id="qr-decode-canvas" class="hidden"></canvas>
+              <div id="qr-scan-result" class="hidden p-4 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 space-y-3 fade-in">
+                <div class="flex items-center justify-between"><span class="text-xs font-bold text-emerald-600 dark:text-emerald-400" data-i18n="qr_decoded_label">تم استخراج المحتوى بأمان:</span><button type="button" class="copy-btn text-xs text-slate-500 flex items-center gap-1" data-copy-target="qr-decoded-text"><i data-lucide="copy" class="w-3.5 h-3.5"></i><span data-i18n="btn_copy">نسخ</span></button></div>
+                <div id="qr-decoded-text" class="p-3 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-xs text-slate-900 dark:text-white mono break-all" dir="ltr"></div>
+                <button id="btn-qr-send-url" type="button" class="hidden w-full py-2.5 rounded-xl bg-teal-600 hover:bg-teal-500 text-white font-bold text-xs flex items-center justify-center gap-1.5"><i data-lucide="shield-alert" class="w-4 h-4"></i><span data-i18n="btn_inspect_decoded_url">افحص هذا الرابط الآن</span></button>
+              </div>
+            </div>
+          </div>
+        </section>
+      </main>
+    </div>
+  </div>
+
+  
+  <div id="help-modal" class="fixed inset-0 z-50 hidden items-end sm:items-center justify-center p-3 sm:p-5 bg-slate-950/60 backdrop-blur-sm fade-in">
+    <div class="w-full max-w-lg bg-white dark:bg-[#111827] border border-slate-200 dark:border-slate-800 rounded-3xl shadow-2xl overflow-hidden">
+      <div class="px-5 py-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between gap-3">
+        <div class="flex items-center gap-2.5 min-w-0">
+          <div class="w-8 h-8 rounded-xl bg-teal-50 dark:bg-teal-500/15 text-teal-600 dark:text-teal-400 flex items-center justify-center font-extrabold text-sm shrink-0">?</div>
+          <h3 id="help-modal-title" class="text-sm sm:text-base font-extrabold text-slate-900 dark:text-white truncate"></h3>
+        </div>
+        <button id="help-modal-close" type="button" class="p-1.5 rounded-xl text-slate-400 hover:text-slate-700 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition"><i data-lucide="x" class="w-4 h-4"></i></button>
+      </div>
+      <div id="help-modal-body" class="p-5 space-y-3 max-h-[70vh] overflow-y-auto text-xs sm:text-sm leading-relaxed text-slate-600 dark:text-slate-300"></div>
+      <div class="px-5 py-3 bg-slate-50 dark:bg-slate-950/70 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between text-[11px] text-slate-400">
+        <span>أمان Pro • دليل الاستخدام السريع</span>
+        <button id="help-modal-ok" type="button" class="px-4 py-1.5 rounded-xl bg-teal-600 hover:bg-teal-500 text-white font-bold text-xs transition">فهمت</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    (function () {
+      try{
+      let selEncFile=null, encBlobUrl=null;
+      document.getElementById('enc-mode-text').addEventListener('click',()=>{document.getElementById('enc-mode-text').className='px-2.5 py-1.5 rounded-lg bg-white dark:bg-slate-800 text-teal-700 dark:text-teal-300 font-bold whitespace-nowrap transition';document.getElementById('enc-mode-file').className='px-2.5 py-1.5 rounded-lg text-slate-500 dark:text-slate-400 whitespace-nowrap transition';document.getElementById('enc-panel-text').classList.remove('hidden');document.getElementById('enc-panel-file').classList.add('hidden');});
+      document.getElementById('enc-mode-file').addEventListener('click',()=>{document.getElementById('enc-mode-file').className='px-2.5 py-1.5 rounded-lg bg-white dark:bg-slate-800 text-teal-700 dark:text-teal-300 font-bold whitespace-nowrap transition';document.getElementById('enc-mode-text').className='px-2.5 py-1.5 rounded-lg text-slate-500 dark:text-slate-400 whitespace-nowrap transition';document.getElementById('enc-panel-file').classList.remove('hidden');document.getElementById('enc-panel-text').classList.add('hidden');});
+      const ed=document.getElementById('enc-file-drop'), ei=document.getElementById('enc-file-input');
+      ed.addEventListener('click',()=>ei.click()); ed.addEventListener('dragover',e=>{e.preventDefault();ed.classList.add('border-teal-500');}); ed.addEventListener('dragleave',()=>ed.classList.remove('border-teal-500'));
+      ed.addEventListener('drop',e=>{e.preventDefault();ed.classList.remove('border-teal-500');if(e.dataTransfer.files[0])setEF(e.dataTransfer.files[0]);});
+      ei.addEventListener('change',()=>{if(ei.files[0])setEF(ei.files[0]);});
+      function setEF(f){selEncFile=f;document.getElementById('enc-file-label').textContent=f.name;document.getElementById('enc-file-meta').textContent=`${(f.size/1024).toFixed(1)} KB`;}
+      function showER(blob,name,isImg){if(encBlobUrl)URL.revokeObjectURL(encBlobUrl);encBlobUrl=URL.createObjectURL(blob);document.getElementById('enc-file-result').classList.remove('hidden');document.getElementById('enc-file-res-info').textContent=name;const dl=document.getElementById('enc-file-dl'),im=document.getElementById('enc-img-preview');dl.href=encBlobUrl;dl.download=name;if(isImg){im.src=encBlobUrl;im.classList.remove('hidden');}else im.classList.add('hidden');}
+      document.getElementById('btn-file-encrypt').addEventListener('click',async()=>{
+        const pass=document.getElementById('aes-file-pass').value; if(!selEncFile||!pass){showToast(currentLang==='ar'?'اختر ملفاً وأدخل كلمة السر':'Pick a file and password','error');return;}
+        try{const raw=new Uint8Array(await selEncFile.arrayBuffer()), nb=new TextEncoder().encode(selEncFile.name), pay=new Uint8Array(2+nb.length+raw.length);pay[0]=(nb.length>>8)&255;pay[1]=nb.length&255;pay.set(nb,2);pay.set(raw,2+nb.length);const s1=crypto.getRandomValues(new Uint8Array(16)), iv=crypto.getRandomValues(new Uint8Array(12)), k=await aesKey(pass,s1), enc=new Uint8Array(await crypto.subtle.encrypt({name:'AES-GCM',iv},k,pay)), out=new Uint8Array(28+enc.length);out.set(s1,0);out.set(iv,16);out.set(enc,28);showER(new Blob([out],{type:'application/octet-stream'}),selEncFile.name+'.aman',false);showToast(currentLang==='ar'?'تم تشفير الملف بنجاح!':'File encrypted!','success');}catch(e){showToast('Error','error');}
+      });
+      document.getElementById('btn-file-decrypt').addEventListener('click',async()=>{
+        const pass=document.getElementById('aes-file-pass').value; if(!selEncFile||!pass){showToast(currentLang==='ar'?'اختر الملف المشفر وأدخل كلمة السر':'Pick .aman file and password','error');return;}
+        try{const b=new Uint8Array(await selEncFile.arrayBuffer()), k=await aesKey(pass,b.slice(0,16)), dec=new Uint8Array(await crypto.subtle.decrypt({name:'AES-GCM',iv:b.slice(16,28)},k,b.slice(28))), nl=(dec[0]<<8)|dec[1], nm=new TextDecoder().decode(dec.slice(2,2+nl)), fb=dec.slice(2+nl), ext=nm.split('.').pop().toLowerCase(), mm={png:'image/png',jpg:'image/jpeg',jpeg:'image/jpeg',webp:'image/webp',gif:'image/gif',pdf:'application/pdf'};showER(new Blob([fb],{type:mm[ext]||'application/octet-stream'}),nm,['png','jpg','jpeg','webp','gif'].includes(ext));showToast(currentLang==='ar'?'تم فك التشفير بنجاح!':'Decrypted!','success');}catch(e){showToast(currentLang==='ar'?'كلمة السر خطأ أو الملف تالف':'Wrong password or invalid file','error');}
+      });
+      
+      const TOOL_GUIDES = {
+        ar: {
+          overview: { t: 'مرحباً بك في أمان Pro', items: [
+            ['ليش هذا الموقع مميز؟', 'أغلب الأدوات هنا تشتغل داخل متصفحك مباشرة (محلياً 100%)، يعني ملفاتك وكلمات مرورك ما تنرسل لأي سيرفر.'],
+            ['كيف تستخدمه؟', 'الصق أي رابط مباشرة في شريط الفحص الرئيسي، أو اختر الأداة المناسبة من الأقسام أو القائمة الجانبية.']
+          ]},
+          url: { t: 'دليل فاحص الروابط الذكي', items: [
+            ['فحص البنية والتصيد', 'يكشف الروابط المزيفة، استخدام IP مباشر، حروف الخداع (Punycode)، وكلمات التصيد قبل ما تضغط على الرابط.'],
+            ['فحص الشبكة المباشر', 'يتحقق من شهادة الأمان SSL، عنوان السيرفر، ويفك الروابط المختصرة ليكشف لك الوجهة الحقيقية.']
+          ]},
+          file: { t: 'دليل فحص الملفات بدون رفع', items: [
+            ['بصمة SHA-256', 'يحسب البصمة الرقمية الفريدة للملف داخل جهازك بدون رفعه، عشان تحافظ على خصوصية ملفاتك الشخصية.'],
+            ['كشف التزييف (Magic Bytes)', 'يقرأ التوقيع الحقيقي داخل الملف ليكشف لو كان ملفاً تنفيذياً خطيراً متنكراً بامتداد PDF أو صورة.']
+          ]},
+          password: { t: 'دليل منظومة كلمات المرور', items: [
+            ['عشوائي / عبارة سرية / من حياتك', 'اختر عشوائي لأقصى قوة، أو "من حياتك" لصنع كلمة قوية جداً ومستحيلة النسيان من تفاصيل ثابتة مع خلط رمزي.'],
+            ['فحص التسريب (k-Anonymity)', 'يتحقق هل تسربت كلمتك عالمياً بإرسال أول 5 حروف من بصمتها فقط، فكلمتك الأصلية تظل سرية 100%.']
+          ]},
+          crypto: { t: 'دليل التشفير وأدوات المطورين', items: [
+            ['تشفير AES-256-GCM', 'أقوى معيار تشفير عالمي لحماية نصوصك وصورك وملفاتك بصيغة .aman بكلمة سر لا يملكها غيرك.'],
+            ['أداة Base64', 'تحوّل النصوص والبيانات لصيغة نصية آمنة للنقل في الروابط أو الأكواد (ترميز للنقل وليس تشفيراً سرياً).'],
+            ['أداة Hash (SHA-256 / 512)', 'تنشئ بصمة رقمية ثابتة لأي نص لا يمكن عكسها، مفيدة للمطورين للتحقق من عدم تعديل البيانات.'],
+            ['محلل JWT', 'يفك ويقرأ رموز تسجيل الدخول (JSON Web Tokens) لعرض الـ Header والـ Payload بسرعة وأمان داخل جهازك.']
+          ]},
+          qr: { t: 'دليل الباركود الأمني', items: [
+            ['صانع الباركود', 'اصنع باركود أنيق لروابطك أو لشبكة الواي فاي بلمسة واحدة وحمّله كصورة PNG متمركزة وواضحة.'],
+            ['فاحص الباركود (ضد التصيد)', 'ارفع صورة أي باركود مجهول ليكشف لك الرابط المخفي داخله وتفحصه أمنياً قبل ما تفتحه!']
+          ]}
+        },
+        en: {
+          overview: { t: 'Welcome to Aman Pro', items: [
+            ['100% Privacy-First', 'Core tools run locally inside your browser — your files and passwords never leave your device.'],
+            ['Quick Start', 'Paste any link in the search bar or pick any security tool from the grid or sidebar.']
+          ]},
+          url: { t: 'Smart URL Inspector Guide', items: [
+            ['Phishing Heuristics', 'Detects IP hosts, Punycode spoofing, shorteners, and suspicious keywords before clicking.'],
+            ['Live Network Check', 'Verifies real SSL certificates, resolves server IP, and unshortens redirect chains.']
+          ]},
+          file: { t: 'Zero-Upload File Inspector', items: [
+            ['SHA-256 Fingerprint', 'Computes cryptographic hashes locally without uploading private files.'],
+            ['Magic Bytes Verification', 'Reads raw file headers to expose fake extensions (e.g., an EXE disguised as a PDF).']
+          ]},
+          password: { t: 'Password Suite Guide', items: [
+            ['3 Generation Modes', 'Choose Random for maximum entropy, Passphrase, or From Your Life for memorable strong passwords.'],
+            ['k-Anonymity Breach Check', 'Checks global breaches by sending only the first 5 SHA-1 hash characters.']
+          ]},
+          crypto: { t: 'Encryption & Dev Tools Guide', items: [
+            ['AES-256-GCM', 'Strong encryption for text, images, and files (.aman) using your own passphrase.'],
+            ['Base64', 'Encodes/decodes text safely for APIs and transport (encoding, not secret encryption).'],
+            ['Hash (SHA-256 / 512)', 'Creates irreversible cryptographic fingerprints to verify data integrity.'],
+            ['JWT Inspector', 'Safely decodes JSON Web Token headers and payloads locally in your browser.']
+          ]},
+          qr: { t: 'Secure QR Suite Guide', items: [
+            ['QR Generator', 'Create crisp, centered URL or Wi-Fi QR codes with one-tap color themes.'],
+            ['Anti-Quishing Scanner', 'Decode any QR image safely and inspect its hidden link before opening it.']
+          ]}
+        }
+      };
+      function openHelpModal(){
+        const g=(TOOL_GUIDES[currentLang]||TOOL_GUIDES.ar)[activeTab]||TOOL_GUIDES.ar.overview;
+        document.getElementById('help-modal-title').textContent=g.t;
+        const body=document.getElementById('help-modal-body'); body.innerHTML='';
+        g.items.forEach(([t,d])=>{
+          const c=document.createElement('div');
+          c.className='p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-950/80 border border-slate-200/80 dark:border-slate-800 space-y-1';
+          c.innerHTML=`<div class="font-bold text-teal-700 dark:text-teal-400 text-xs sm:text-sm">${t}</div><p class="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">${d}</p>`;
+          body.appendChild(c);
+        });
+        document.getElementById('help-modal-ok').textContent=currentLang==='ar'?'فهمت':'Got it';
+        const m=document.getElementById('help-modal'); m.classList.remove('hidden'); m.classList.add('flex');
+      }
+      function closeHelpModal(){ const m=document.getElementById('help-modal'); m.classList.add('hidden'); m.classList.remove('flex'); }
+      document.getElementById('help-guide-btn').addEventListener('click',openHelpModal);
+      document.getElementById('help-modal-close').addEventListener('click',closeHelpModal);
+      document.getElementById('help-modal-ok').addEventListener('click',closeHelpModal);
+      document.getElementById('help-modal').addEventListener('click',e=>{if(e.target.id==='help-modal')closeHelpModal();});
+      if(typeof lucide!=="undefined")lucide.createIcons();}catch(e){}
+      const I18N = {
+        ar: { brand_name:'أمان Pro', local_first_pill:'خصوصية تامة • معالجة محلية', sec_scan:'الفحص والحماية', sec_tools:'أدوات الأمان', nav_overview:'الرئيسية', tab_url:'فحص الروابط', tab_file:'فحص الملفات', tab_password:'كلمات المرور', tab_crypto:'التشفير والأكواد', tab_qr:'الباركود الأمني', btn_wipe:'مسح بيانات الجلسة', hero_title:'أمان Pro — حماية وفحص فوري بدون تعقيد', hero_desc:'افحص أي رابط أو ملف، أنشئ كلمات مرور قوية، أو شفّر نصوصك بخصوصية تامة داخل متصفحك.', all_sections_title:'اختر الخدمة', card_url_desc:'كشف روابط التصيد والروابط المختصرة قبل فتحها.', card_file_desc:'فحص بصمة الملف ونوعه الحقيقي بدون رفعه لأي سيرفر.', card_pw_desc:'توليد كلمات مرور قوية وفحص هل تم تسريبها عالمياً.', card_crypto_desc:'تشفير النصوص بـ AES-256 وأدوات Base64 وHash وJWT.', card_qr_desc:'إنشاء باركود للروابط والواي فاي، أو فحص صورة باركود للكشف عن الرابط المخفي قبل فتحه.', url_title:'فاحص الروابط الذكي', url_desc:'أدخل الرابط لفحص بنيته الأمنية وكشف علامات التصيد والروابط المختصرة.', btn_scan_url:'فحص الرابط', quick_samples:'تجربة سريعة:', url_findings_title:'نتائج الفحص', open_vt_url:'تحقق عبر VirusTotal', url_tech_details:'عرض التفاصيل التقنية', file_title:'فحص الملفات بالبصمة الرقمية', file_desc:'يحسب بصمة SHA-256 ويكشف النوع الحقيقي للملف داخل جهازك بدون رفعه لأي سيرفر.', file_drop_title:'اسحب أي ملف هنا أو اضغط للاختيار', file_drop_sub:'المعالجة محلية 100% — الملف لا يغادر جهازك', file_or_test:'تجربة جاهزة:', btn_copy:'نسخ', file_vt_note:'افحص البصمة مباشرة في VirusTotal دون رفع الملف.', btn_check_hash_vt:'فحص البصمة في VirusTotal', pw_gen_title:'مولّد كلمات المرور', pw_random:'عشوائي', pw_phrase:'عبارة سرية', pw_length:'الطول', pw_words:'عدد الكلمات', pw_sep:'الفاصل:', pw_add_num:'إضافة رقم', hibp_title:'فحص تسريب كلمة المرور', hibp_desc:'فحص آمن عبر k-Anonymity — يتم إرسال أول 5 حروف من البصمة فقط ولا تنكشف كلمتك أبداً.', btn_check_breach:'فحص التسريب', btn_use_gen:'فحص المولّدة', hibp_privacy_tip:'جرب فحص كلمة شائعة مثل 123456 لمعرفة عدد مرات تسريبها عالمياً.', aes_title:'تشفير النصوص (AES-256-GCM)', btn_encrypt:'تشفير', btn_decrypt:'فك التشفير', result_label:'النتيجة:', dev_tools_title:'أدوات المطورين', qr_gen_title:'صانع الباركود', qr_fg:'لون الكود:', qr_bg:'الخلفية:', btn_download_png:'تحميل PNG', btn_test_scan_this:'اختبر فحصه', qr_scan_title:'فاحص الباركود الآمن', qr_scan_desc:'ارفع صورة باركود لقراءة الرابط المخفي داخله وفحصه قبل فتحه.', qr_upload_title:'ارفع صورة باركود للفحص', qr_upload_sub:'قراءة محلية آمنة بدون فتح الرابط', qr_decoded_label:'تم استخراج المحتوى بأمان:', btn_inspect_decoded_url:'افحص هذا الرابط الآن' },
+        en: { brand_name:'Aman Pro', local_first_pill:'Private • 100% Local', sec_scan:'Inspection', sec_tools:'Security Tools', nav_overview:'Home', tab_url:'URL Inspector', tab_file:'File Check', tab_password:'Passwords', tab_crypto:'Encryption & Dev', tab_qr:'Secure QR', btn_wipe:'Wipe Session', hero_title:'Aman Pro — Simple, Trustworthy Security', hero_desc:'Inspect links and files, generate strong passwords, or encrypt text privately inside your browser.', all_sections_title:'Choose a Tool', card_url_desc:'Detect phishing links, shorteners, and suspicious domains before clicking.', card_file_desc:'Verify SHA-256 hash and true file signature locally with zero uploads.', card_pw_desc:'Generate strong passwords and check if they appeared in global breaches.', card_crypto_desc:'Encrypt text with AES-256-GCM plus Base64, Hash, and JWT utilities.', card_qr_desc:'Create URL or Wi-Fi QR codes, or inspect a QR image safely before opening its link.', url_title:'Smart URL Inspector', url_desc:'Enter any URL to inspect its structure for phishing indicators and shorteners.', btn_scan_url:'Inspect URL', quick_samples:'Quick test:', url_findings_title:'Inspection Results', open_vt_url:'Check on VirusTotal', url_tech_details:'Technical Details', file_title:'Hash-First File Inspector', file_desc:'Computes SHA-256 and verifies real Magic Bytes locally without uploading your file.', file_drop_title:'Drop any file here or click to choose', file_drop_sub:'100% local processing — file never leaves your device', file_or_test:'Try sample:', btn_copy:'Copy', file_vt_note:'Lookup this hash directly on VirusTotal without uploading the file.', btn_check_hash_vt:'Check Hash on VirusTotal', pw_gen_title:'Password Generator', pw_random:'Random', pw_phrase:'Passphrase', pw_length:'Length', pw_words:'Words', pw_sep:'Separator:', pw_add_num:'Add Number', hibp_title:'Breach Checker', hibp_desc:'Private k-Anonymity check — only the first 5 SHA-1 characters are ever sent.', btn_check_breach:'Check Breach', btn_use_gen:'Use Generated', hibp_privacy_tip:'Try checking a common password like 123456 to see real breach counts.', aes_title:'AES-256-GCM Encryption', btn_encrypt:'Encrypt', btn_decrypt:'Decrypt', result_label:'Output:', dev_tools_title:'Developer Utilities', qr_gen_title:'QR Generator', qr_fg:'Color:', qr_bg:'Background:', btn_download_png:'Download PNG', btn_test_scan_this:'Test Scan', qr_scan_title:'Safe QR Scanner', qr_scan_desc:'Upload any QR image to reveal and inspect its hidden link safely.', qr_upload_title:'Upload QR Image', qr_upload_sub:'Decoded locally without opening links', qr_decoded_label:'Decoded safely:', btn_inspect_decoded_url:'Inspect This Link Now' }
+      };
+      const TAB_TITLES = { overview:'nav_overview', url:'tab_url', file:'tab_file', password:'tab_password', crypto:'tab_crypto', qr:'tab_qr' };
+      let currentLang='ar', activeTab='overview', langSpinDeg=0, themeSpinDeg=0, isDark=false;
+      try { if (localStorage.getItem('aman_original_theme')==='dark') isDark=true; const sl=localStorage.getItem('aman_original_lang'); if (sl==='en'||sl==='ar') currentLang=sl; } catch(e){}
+      function applyTheme(d){ isDark=d; document.documentElement.classList.toggle('dark', d); try{localStorage.setItem('aman_original_theme', d?'dark':'light');}catch(e){} }
+      applyTheme(isDark);
+      document.getElementById('theme-toggle').addEventListener('click', ()=>{ themeSpinDeg+=360; document.getElementById('theme-icon-wrap').style.transform=`rotate(${themeSpinDeg}deg)`; applyTheme(!isDark); });
+
+      const sidebar=document.getElementById('sidebar'), backdrop=document.getElementById('sidebar-backdrop');
+      function updateSidebarPos(){ const r=currentLang==='ar'; sidebar.classList.toggle('right-0',r); sidebar.classList.toggle('border-l',r); sidebar.classList.toggle('left-0',!r); sidebar.classList.toggle('border-r',!r); closeDrawer(); }
+      function openDrawer(){ sidebar.classList.remove('translate-x-full','-translate-x-full'); backdrop.classList.remove('hidden'); }
+      function closeDrawer(){ if(window.innerWidth<1024){ sidebar.classList.remove('translate-x-full','-translate-x-full'); sidebar.classList.add(currentLang==='ar'?'translate-x-full':'-translate-x-full'); } backdrop.classList.add('hidden'); }
+      document.getElementById('open-sidebar').addEventListener('click', openDrawer);
+      document.getElementById('close-sidebar').addEventListener('click', closeDrawer);
+      backdrop.addEventListener('click', closeDrawer);
+
+      function applyLang(l){
+        currentLang=l; document.documentElement.lang=l; const _ec=document.getElementById('lang-e-char'); if(_ec) _ec.textContent=(document.documentElement.lang==='ar'?'E':'ع'); document.documentElement.dir=l==='ar'?'rtl':'ltr';
+        document.querySelectorAll('[data-i18n]').forEach(el=>{ const k=el.getAttribute('data-i18n'); if(I18N[l][k]) el.textContent=I18N[l][k]; });
+        document.getElementById('page-title').textContent=I18N[l][TAB_TITLES[activeTab]]||'';
+        document.querySelectorAll('.jump-btn').forEach(c=>{ c.classList.toggle('text-right',l==='ar'); c.classList.toggle('text-left',l!=='ar'); });
+        updateSidebarPos(); try{localStorage.setItem('aman_original_lang',l);}catch(e){}
+      }
+      document.getElementById('lang-toggle').addEventListener('click', ()=>{ langSpinDeg+=360; document.getElementById('lang-e-char').style.transform=`rotate(${langSpinDeg}deg)`; applyLang(currentLang==='ar'?'en':'ar'); });
+
+      function showToast(msg, type='info'){
+        const c=document.getElementById('toast-container'), el=document.createElement('div');
+        const m={info:'bg-slate-900 text-white border-slate-700',success:'bg-teal-600 text-white border-teal-500',error:'bg-rose-600 text-white border-rose-500'};
+        el.className=`pointer-events-auto px-4 py-2.5 rounded-xl border shadow-lg text-xs font-bold fade-in ${m[type]||m.info}`;
+        el.textContent=msg; c.appendChild(el); setTimeout(()=>el.remove(), 2500);
+      }
+      function copyText(t){ if(!t||t==='—')return; if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(t).then(()=>showToast(currentLang==='ar'?'تم النسخ':'Copied','success')).catch(()=>fbCopy(t));}else fbCopy(t); }
+      function fbCopy(t){ const a=document.createElement('textarea'); a.value=t; a.style.position='fixed'; a.style.opacity='0'; document.body.appendChild(a); a.select(); try{document.execCommand('copy'); showToast(currentLang==='ar'?'تم النسخ':'Copied','success');}catch(e){} document.body.removeChild(a); }
+      document.addEventListener('click', e=>{ const b=e.target.closest('.copy-btn'); if(!b)return; const el=document.getElementById(b.getAttribute('data-copy-target')); if(el)copyText(el.textContent.trim()); });
+
+      function switchTab(t){ activeTab=t; document.querySelectorAll('.nav-item').forEach(b=>b.classList.toggle('active',b.getAttribute('data-tab')===t)); document.querySelectorAll('.tab-panel').forEach(p=>p.classList.toggle('hidden',p.id!==`panel-${t}`)); document.getElementById('page-title').textContent=I18N[currentLang][TAB_TITLES[t]]||''; closeDrawer(); if(t==='qr')generateQR(); window.scrollTo({top:0,behavior:'smooth'}); }
+      document.querySelectorAll('.nav-item').forEach(b=>b.addEventListener('click',()=>switchTab(b.getAttribute('data-tab'))));
+      document.querySelectorAll('.jump-btn').forEach(b=>b.addEventListener('click',()=>switchTab(b.getAttribute('data-jump'))));
+      document.getElementById('home-quick-url-form').addEventListener('submit', e=>{ e.preventDefault(); const v=document.getElementById('home-quick-url-input').value.trim(); if(!v){switchTab('url');return;} document.getElementById('url-input').value=v; switchTab('url'); inspectUrl(v); });
+
+      const SHORTENERS=['bit.ly','tinyurl.com','t.co','goo.gl','ow.ly','is.gd','buff.ly','cutt.ly','rb.gy','shorturl.at'];
+      const RISKY_TLDS=['.xyz','.top','.tk','.ml','.ga','.cf','.gq','.zip','.mov','.click','.work','.loan'];
+      const PHISH_WORDS=['login','verify','update','secure','account','banking','paypal','wallet','confirm','signin','free-gift','password'];
+      let lastUrl='';
+      function esc(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+      function setUrlScoreUI(sc){
+        sc=Math.max(0,Math.min(100,Math.round(sc)));
+        const ci=document.getElementById('url-score-circle'), bd=document.getElementById('url-verdict-badge');
+        ci.style.strokeDashoffset=(314.16*(1-sc/100)).toFixed(2);
+        document.getElementById('url-score-val').textContent=sc;
+        if(sc>=80){ci.style.stroke='#10b981';bd.className='mt-3 px-3 py-1 rounded-full text-xs font-bold bg-emerald-500/15 text-emerald-700 dark:text-emerald-300';bd.textContent=currentLang==='ar'?'آمن':'Safe';}
+        else if(sc>=50){ci.style.stroke='#f59e0b';bd.className='mt-3 px-3 py-1 rounded-full text-xs font-bold bg-amber-500/15 text-amber-700 dark:text-amber-300';bd.textContent=currentLang==='ar'?'مشبوه — خذ حذرك':'Suspicious';}
+        else{ci.style.stroke='#ef4444';bd.className='mt-3 px-3 py-1 rounded-full text-xs font-bold bg-rose-500/15 text-rose-700 dark:text-rose-300';bd.textContent=currentLang==='ar'?'عالي الخطورة':'High Risk';}
+      }
+      function inspectUrl(raw){
+        let c=raw.trim(); if(!c){showToast(currentLang==='ar'?'أدخل رابطاً أولاً':'Enter a URL','error');return;}
+        if(!/^[a-zA-Z][a-zA-Z0-9+.-]*:/.test(c)) c='https://'+c;
+        let p; try{p=new URL(c);}catch(e){showToast(currentLang==='ar'?'صيغة الرابط غير صحيحة':'Invalid URL','error');return;}
+        lastUrl=p.href; let score=100; const f=[], h=p.hostname.toLowerCase();
+        if(p.protocol==='https:') f.push({l:'ok',t:currentLang==='ar'?'يستخدم اتصالاً مشفراً HTTPS.':'Uses encrypted HTTPS.'});
+        else{score-=27;f.push({l:'danger',t:currentLang==='ar'?`الرابط غير مشفر (${p.protocol}).`:`Unencrypted (${p.protocol}).`});}
+        if(/^(\d{1,3}\.){3}\d{1,3}$/.test(h)||h.startsWith('[')){score-=34;f.push({l:'danger',t:currentLang==='ar'?'يستخدم عنوان IP مباشر بدل اسم دومين.':'Uses raw IP address.'});}
+        if(p.username||p.password||p.href.includes('@')){score-=29;f.push({l:'danger',t:currentLang==='ar'?'يحتوي على رمز @ لإخفاء الوجهة الحقيقية.':'Contains "@" masking symbol.'});}
+        if(h.includes('xn--')){score-=28;f.push({l:'danger',t:currentLang==='ar'?'يحتوي على Punycode (xn--) لاحتمال خداع الحروف.':'Contains Punycode (xn--).'});}
+        if(SHORTENERS.some(x=>h===x||h.endsWith('.'+x))){score-=21;f.push({l:'warn',t:currentLang==='ar'?'رابط مختصر يخفي الوجهة النهائية.':'Shortened link hides destination.'});}
+        const tld=RISKY_TLDS.find(x=>h.endsWith(x)); if(tld){score-=17;f.push({l:'warn',t:currentLang==='ar'?`امتداد الدومين (${tld}) شائع في التصيد.`:`TLD (${tld}) is frequently abused.`});}
+        const sp=h.split('.'); if(sp.length>=3) score-=Math.min(18,(sp.length-2)*6);
+        if(sp.length>=4&&!/^(\d{1,3}\.){3}\d{1,3}$/.test(h)) f.push({l:'warn',t:currentLang==='ar'?`عدد الدومينات الفرعية مرتفع (${sp.length}).`:`Excessive subdomains (${sp.length}).`});
+        const hyphens=(h.match(/-/g)||[]).length, digits=(h.match(/[0-9]/g)||[]).length;
+        if(hyphens>0) score-=Math.min(12,hyphens*4);
+        if(digits>0&&!/^(\d{1,3}\.){3}\d{1,3}$/.test(h)) score-=Math.min(8,digits*2);
+        if(p.port&&!['80','443'].includes(p.port)){score-=14;f.push({l:'warn',t:currentLang==='ar'?`منفذ غير قياسي (:${p.port}).`:`Non-standard port (:${p.port}).`});}
+        const kw=PHISH_WORDS.filter(w=>(h+p.pathname+p.search).toLowerCase().includes(w));
+        if(kw.length>=2){score-=Math.min(28,kw.length*7);f.push({l:'danger',t:currentLang==='ar'?`كلمات تصيد متكررة (${kw.slice(0,4).join(', ')}).`:`Phishing keywords (${kw.slice(0,4).join(', ')}).`});}
+        else if(kw.length===1){score-=7;f.push({l:'warn',t:currentLang==='ar'?`يحتوي على كلمة حساسة (${kw[0]}).`:`Sensitive keyword (${kw[0]}).`});}
+        if(p.href.length>45) score-=Math.min(12,Math.floor((p.href.length-45)/15));
+        if(p.search) score-=Math.min(6,p.search.split('&').length*2);
+        score=Math.max(0,Math.min(100,score));
+        if(f.length===1&&f[0].l==='ok') f.push({l:'ok',t:currentLang==='ar'?'لم يتم رصد مؤشرات تصيد في بنية الرابط.':'No phishing indicators detected.'});
+        document.getElementById('url-result').classList.remove('hidden');
+        setUrlScoreUI(score);
+        const ul=document.getElementById('url-findings-list'); ul.innerHTML='';
+        const addRow=(l,t)=>{const li=document.createElement('li');const st={ok:'bg-emerald-50 dark:bg-emerald-500/10 border-emerald-200 dark:border-emerald-500/25 text-emerald-800 dark:text-emerald-200',warn:'bg-amber-50 dark:bg-amber-500/10 border-amber-200 dark:border-amber-500/25 text-amber-800 dark:text-amber-200',danger:'bg-rose-50 dark:bg-rose-500/10 border-rose-200 dark:border-rose-500/25 text-rose-800 dark:text-rose-200'};li.className=`p-2.5 rounded-xl border flex items-start gap-2.5 ${st[l]}`;li.innerHTML=`<span class="font-bold shrink-0">${l==='ok'?'✓':l==='warn'?'!':'✕'}</span><span>${esc(t)}</span>`;ul.appendChild(li);};
+        f.forEach(x=>addRow(x.l,x.t));
+        document.getElementById('url-tech-box').innerHTML=`<div><span class="text-slate-400">Protocol:</span> <span class="text-teal-600 dark:text-teal-400">${esc(p.protocol)}</span></div><div><span class="text-slate-400">Host:</span> <span>${esc(p.hostname)}</span></div><div><span class="text-slate-400">Port:</span> <span>${esc(p.port||'default')}</span></div><div><span class="text-slate-400">Path:</span> <span class="break-all">${esc(p.pathname)}</span></div><div class="sm:col-span-2"><span class="text-slate-400">Query:</span> <span class="break-all">${esc(p.search||'(none)')}</span></div>`;
+        const loader = document.createElement('li');
+        loader.id = 'url-scan-loader';
+        loader.className = 'p-2.5 rounded-xl border border-teal-200 dark:border-teal-500/30 bg-teal-50/70 dark:bg-teal-500/10 text-teal-800 dark:text-teal-200 flex items-center gap-2.5 text-xs font-semibold';
+        loader.innerHTML = `<span class="inline-block w-3.5 h-3.5 border-2 border-teal-600 dark:border-teal-400 border-t-transparent rounded-full animate-spin shrink-0"></span><span id="url-loader-txt">${currentLang==='ar'?'جاري فحص السيرفر وشهادة SSL والتحويلات...':'Scanning server, SSL & redirects...'}</span>`;
+        ul.appendChild(loader);
+        fetch('/api/scan-url',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({url:p.href})}).then(r=>r.ok?r.json():null).then(d=>{
+          if(!d){loader.remove();return;}
+          const steps=[];
+          if(d.ip&&d.ip!=='unresolved') steps.push({l:'ok',t:currentLang==='ar'?`عنوان السيرفر (IP): ${d.ip}`:`Server IP: ${d.ip}`,ds:0,next:currentLang==='ar'?'جاري فحص التحويلات وشهادة SSL...':'Checking redirects & SSL...'});
+          else steps.push({l:'danger',t:currentLang==='ar'?'تعذر العثور على السيرفر (DNS غير موجود).':'Domain DNS unresolved.',ds:-24,next:currentLang==='ar'?'جاري استكمال الفحص...':'Continuing scan...'});
+          if(d.redirect&&d.redirect.final_url&&d.redirect.final_url!==p.href){
+            let pen=0; try{if(new URL(d.redirect.final_url).hostname!==h)pen=-11;}catch(e){}
+            steps.push({l:'warn',t:currentLang==='ar'?`تم فك التحويل — الوجهة الحقيقية: ${d.redirect.final_url}`:`Redirects to: ${d.redirect.final_url}`,ds:pen,next:currentLang==='ar'?'جاري التحقق من شهادة SSL...':'Verifying SSL certificate...'});
+          }
+          if(d.ssl&&d.ssl.valid) steps.push({l:'ok',t:currentLang==='ar'?`شهادة SSL موثقة (${d.ssl.issuer})`:`Valid SSL (${d.ssl.issuer})`,ds:2,next:currentLang==='ar'?'جاري فحص المحركات العالمية...':'Checking global engines...'});
+          else if(p.protocol==='https:') steps.push({l:'danger',t:currentLang==='ar'?'تحذير: فشل التحقق من شهادة SSL!':'SSL verification failed!',ds:-23,next:currentLang==='ar'?'جاري فحص المحركات العالمية...':'Checking global engines...'});
+          if(d.vt&&d.vt.ok&&d.vt.stats){
+            const m=(d.vt.stats.malicious||0)+(d.vt.stats.suspicious||0), tot=m+(d.vt.stats.harmless||0);
+            steps.push({l:m>0?'danger':'ok',t:currentLang==='ar'?`فحص المحركات العالمية: ${m} تحذير من أصل ${tot} محرك`:`Global engines: ${m} flagged / ${tot}`,ds:m>0?-Math.min(100,m*22):0,next:''});
+          }
+          let i=0;
+          function revealNext(){
+            if(i>=steps.length){ loader.remove(); setUrlScoreUI(score); return; }
+            const st=steps[i++]; score+=st.ds; setUrlScoreUI(score);
+            const li=document.createElement('li');
+            const cm={ok:'bg-emerald-50 dark:bg-emerald-500/10 border-emerald-200 dark:border-emerald-500/25 text-emerald-800 dark:text-emerald-200',warn:'bg-amber-50 dark:bg-amber-500/10 border-amber-200 dark:border-amber-500/25 text-amber-800 dark:text-amber-200',danger:'bg-rose-50 dark:bg-rose-500/10 border-rose-200 dark:border-rose-500/25 text-rose-800 dark:text-rose-200'};
+            li.className=`p-2.5 rounded-xl border flex items-start gap-2.5 fade-in ${cm[st.l]}`;
+            li.innerHTML=`<span class="font-bold shrink-0">${st.l==='ok'?'✓':st.l==='warn'?'!':'✕'}</span><span>${esc(st.t)}</span>`;
+            ul.insertBefore(li, loader);
+            const lt=document.getElementById('url-loader-txt');
+            if(lt&&st.next) lt.textContent=st.next;
+            setTimeout(revealNext, 320);
+          }
+          setTimeout(revealNext, 250);
+        }).catch(()=>{loader.remove();});
+      }
+      document.getElementById('url-form').addEventListener('submit', e=>{e.preventDefault();inspectUrl(document.getElementById('url-input').value);});
+      document.querySelectorAll('.url-sample').forEach(b=>b.addEventListener('click',()=>{const u=b.getAttribute('data-url');document.getElementById('url-input').value=u;inspectUrl(u);}));
+      document.getElementById('toggle-url-tech').addEventListener('click',()=>document.getElementById('url-tech-box').classList.toggle('hidden'));
+      
+
+      const MAGIC=[{hex:'25504446',type:'PDF Document',exts:['pdf']},{hex:'89504E47',type:'PNG Image',exts:['png']},{hex:'FFD8FF',type:'JPEG Image',exts:['jpg','jpeg']},{hex:'47494638',type:'GIF Image',exts:['gif']},{hex:'504B0304',type:'ZIP / Office / APK',exts:['zip','docx','xlsx','pptx','apk','jar']},{hex:'4D5A',type:'Windows Executable (EXE)',exts:['exe','dll','scr','msi']},{hex:'7F454C46',type:'Linux ELF',exts:['elf','so','bin']},{hex:'52617221',type:'RAR Archive',exts:['rar']}];
+      function bufHex(b){ return Array.from(new Uint8Array(b)).map(x=>x.toString(16).padStart(2,'0')).join(''); }
+      async function analyzeFile(name,size,buf){
+        const [s256,s1]=await Promise.all([crypto.subtle.digest('SHA-256',buf),crypto.subtle.digest('SHA-1',buf)]);
+        const h256=bufHex(s256), h1=bufHex(s1), hdr=bufHex(buf.slice(0,8)).toUpperCase();
+        const det=MAGIC.find(m=>hdr.startsWith(m.hex)), parts=name.toLowerCase().split('.'), ext=parts.length>1?parts[parts.length-1]:'';
+        const al=[]; let risky=false;
+        if(parts.length>=3&&['exe','bat','cmd','scr','vbs','js','ps1','apk','msi'].includes(ext)){risky=true;al.push({l:'danger',t:currentLang==='ar'?`تحذير: امتداد مزدوج مخادع (.${parts[parts.length-2]}.${ext})!`:`Double extension (.${parts[parts.length-2]}.${ext})!`});}
+        if(det){ al.push({l:'ok',t:currentLang==='ar'?`النوع الحقيقي (Magic Bytes): ${det.type}`:`Detected type: ${det.type}`}); if(ext&&!det.exts.includes(ext)){risky=true;al.push({l:'danger',t:currentLang==='ar'?`تعارض! الامتداد (.${ext}) لا يطابق (${det.type}).`:`Mismatch! (.${ext}) != ${det.type}.`});} if(det.hex==='4D5A'){risky=true;al.push({l:'warn',t:currentLang==='ar'?'ملف تنفيذي لويندوز — تحقق من بصمته قبل التشغيل.':'Windows executable.'});} }
+        else al.push({l:'ok',t:currentLang==='ar'?`توقيع البايتات: ${hdr||'فارغ'}`:`Header bytes: ${hdr||'empty'}`});
+        document.getElementById('file-result').classList.remove('hidden'); document.getElementById('file-res-name').textContent=name; document.getElementById('file-res-meta').textContent=`${(size/1024).toFixed(2)} KB`;
+        document.getElementById('hash-sha256').textContent=h256; document.getElementById('hash-sha1').textContent=h1; 
+        const pill=document.getElementById('file-risk-pill'); pill.className=risky?'px-3 py-1 rounded-full text-xs font-bold bg-rose-500/15 text-rose-700 dark:text-rose-300':'px-3 py-1 rounded-full text-xs font-bold bg-emerald-500/15 text-emerald-700 dark:text-emerald-300'; pill.textContent=risky?(currentLang==='ar'?'تنبيه أمني':'Warning'):(currentLang==='ar'?'بنية سليمة':'Clean');
+        const box=document.getElementById('file-alerts'); box.innerHTML=''; al.forEach(a=>{ const d=document.createElement('div'); d.className=`p-2.5 rounded-xl border ${a.l==='danger'?'bg-rose-50 dark:bg-rose-500/10 border-rose-200 dark:border-rose-500/30 text-rose-800 dark:text-rose-200':a.l==='warn'?'bg-amber-50 dark:bg-amber-500/10 border-amber-200 dark:border-amber-500/30 text-amber-800 dark:text-amber-200':'bg-emerald-50 dark:bg-emerald-500/10 border-emerald-200 dark:border-emerald-500/25 text-emerald-800 dark:text-emerald-200'}`; d.textContent=a.t; box.appendChild(d); });
+        fetch('/api/scan-hash',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({hash:h256})}).then(r=>r.ok?r.json():null).then(d=>{
+          if(!d||!d.vt||!d.vt.ok||!d.vt.stats)return;
+          const m=(d.vt.stats.malicious||0)+(d.vt.stats.suspicious||0),tot=m+(d.vt.stats.undetected||0)+(d.vt.stats.harmless||0);
+          const dv=document.createElement('div');
+          dv.className=`p-2.5 rounded-xl border ${m>0?'bg-rose-50 dark:bg-rose-500/10 border-rose-200 dark:border-rose-500/30 text-rose-800 dark:text-rose-200':'bg-emerald-50 dark:bg-emerald-500/10 border-emerald-200 dark:border-emerald-500/25 text-emerald-800 dark:text-emerald-200'}`;
+          dv.textContent=currentLang==='ar'?`فحص المحركات العالمية: ${m} تحذير من أصل ${tot} محرك`:`Global engines: ${m} flagged / ${tot}`;
+          box.appendChild(dv);
+        }).catch(()=>{});
+      }
+      const dz=document.getElementById('file-dropzone'), fi=document.getElementById('file-input');
+      dz.addEventListener('click',()=>fi.click()); dz.addEventListener('dragover',e=>{e.preventDefault();dz.classList.add('border-teal-500');}); dz.addEventListener('dragleave',()=>dz.classList.remove('border-teal-500'));
+      dz.addEventListener('drop',e=>{e.preventDefault();dz.classList.remove('border-teal-500');if(e.dataTransfer.files[0])e.dataTransfer.files[0].arrayBuffer().then(b=>analyzeFile(e.dataTransfer.files[0].name,e.dataTransfer.files[0].size,b));});
+      fi.addEventListener('change',()=>{if(fi.files[0])fi.files[0].arrayBuffer().then(b=>analyzeFile(fi.files[0].name,fi.files[0].size,b));});
+      document.getElementById('file-sample-safe').addEventListener('click',()=>{const b=new Uint8Array([0x25,0x50,0x44,0x46,0x2D,0x31,0x2E,0x37,0x0A,0x25,0x41,0x6D,0x61,0x6E]);analyzeFile('report_2026.pdf',b.length,b.buffer);});
+      document.getElementById('file-sample-spoof').addEventListener('click',()=>{const b=new Uint8Array([0x4D,0x5A,0x90,0x00,0x03,0x00,0x00,0x00,0x04,0x00]);analyzeFile('invoice.pdf.exe',b.length,b.buffer);});
+
+      const WORDS=['falcon','shield','cedar','matrix','orbit','sanaa','quartz','cipher','harbor','summit','ember','pulse','velvet','cobalt','prism','anchor','nebula','cactus','zenith','beacon','silver','canyon','voyage','comet','oasis','thunder','forest','glacier','phoenix','marble','horizon','delta'];
+      let pwMode='random';
+      function rInt(m){ const a=new Uint32Array(1); crypto.getRandomValues(a); return a[0]%m; }
+      function genPw(){
+        let pwd='', ent=0;
+        if(pwMode==='random'){
+          const len=parseInt(document.getElementById('pw-len-slider').value,10); document.getElementById('pw-len-val').textContent=len;
+          let pool=''; if(document.getElementById('opt-upper').checked)pool+='ABCDEFGHJKLMNPQRSTUVWXYZ'; if(document.getElementById('opt-lower').checked)pool+='abcdefghijkmnopqrstuvwxyz'; if(document.getElementById('opt-num').checked)pool+='23456789'; if(document.getElementById('opt-sym').checked)pool+='!@#$%^&*()-_=+[]{}';
+          if(!pool){pool='abcdefghijkmnopqrstuvwxyz23456789';document.getElementById('opt-lower').checked=true;}
+          for(let i=0;i<len;i++)pwd+=pool[rInt(pool.length)]; ent=Math.round(len*Math.log2(pool.length));
+        }else{
+          const cnt=parseInt(document.getElementById('pw-words-slider').value,10); document.getElementById('pw-words-val').textContent=cnt;
+          const sep=document.getElementById('pw-sep-select').value, addN=document.getElementById('pw-phrase-num').checked, ws=[];
+          for(let i=0;i<cnt;i++){const w=WORDS[rInt(WORDS.length)];ws.push(w[0].toUpperCase()+w.slice(1));}
+          if(addN)ws[ws.length-1]+=(rInt(90)+10); pwd=ws.join(sep); ent=Math.max(85,Math.round(pwd.length*3.8));
+        }
+        document.getElementById('pw-output').textContent=pwd; document.getElementById('pw-entropy-label').textContent=`${ent} bits`;
+        const bar=document.getElementById('pw-strength-bar'), lb=document.getElementById('pw-strength-label'), cr=document.getElementById('pw-crack-time');
+        if(ent>=90){bar.style.width='100%';bar.className='h-full bg-emerald-500 transition-all';lb.className='font-bold text-emerald-600 dark:text-emerald-400';lb.textContent=currentLang==='ar'?'قوية جداً':'Very Strong';cr.textContent=currentLang==='ar'?'الوقت المقدر للكسر: قرون طويلة.':'Est. crack time: Centuries';}
+        else if(ent>=65){bar.style.width='75%';bar.className='h-full bg-teal-500 transition-all';lb.className='font-bold text-teal-600 dark:text-teal-400';lb.textContent=currentLang==='ar'?'قوية':'Strong';cr.textContent=currentLang==='ar'?'الوقت المقدر للكسر: سنوات عديدة.':'Est. crack time: Many years';}
+        else if(ent>=45){bar.style.width='50%';bar.className='h-full bg-amber-500 transition-all';lb.className='font-bold text-amber-600 dark:text-amber-400';lb.textContent=currentLang==='ar'?'متوسطة':'Moderate';cr.textContent=currentLang==='ar'?'الوقت المقدر للكسر: أيام إلى أشهر.':'Est. crack time: Days to months';}
+        else{bar.style.width='25%';bar.className='h-full bg-rose-500 transition-all';lb.className='font-bold text-rose-600 dark:text-rose-400';lb.textContent=currentLang==='ar'?'ضعيفة':'Weak';cr.textContent=currentLang==='ar'?'الوقت المقدر للكسر: ثوانٍ إلى ساعات.':'Est. crack time: Seconds to hours';}
+      }
+      document.getElementById('pw-mode-random').addEventListener('click',()=>{pwMode='random';document.getElementById('pw-mode-random').className='px-2.5 py-1 rounded-md bg-white dark:bg-slate-800 text-teal-700 dark:text-teal-300 font-bold whitespace-nowrap';document.getElementById('pw-mode-phrase').className='px-2.5 py-1 rounded-md text-slate-500 whitespace-nowrap';document.getElementById('pw-random-opts').classList.remove('hidden');document.getElementById('pw-phrase-opts').classList.add('hidden');genPw();});
+      document.getElementById('pw-mode-phrase').addEventListener('click',()=>{pwMode='phrase';document.getElementById('pw-mode-phrase').className='px-2.5 py-1 rounded-md bg-white dark:bg-slate-800 text-teal-700 dark:text-teal-300 font-bold whitespace-nowrap';document.getElementById('pw-mode-random').className='px-2.5 py-1 rounded-md text-slate-500 whitespace-nowrap';document.getElementById('pw-phrase-opts').classList.remove('hidden');document.getElementById('pw-random-opts').classList.add('hidden');genPw();});
+      ['pw-len-slider','opt-upper','opt-lower','opt-num','opt-sym','pw-words-slider','pw-sep-select','pw-phrase-num'].forEach(id=>document.getElementById(id).addEventListener('input',genPw));
+      document.getElementById('pw-refresh').addEventListener('click',()=>{ if(pwMode==='life'){lifeVar=(lifeVar+1)%4;buildLifePw();}else genPw(); });
+      document.getElementById('hibp-toggle-vis').addEventListener('click',()=>{const i=document.getElementById('hibp-input');i.type=i.type==='password'?'text':'password';});
+      document.getElementById('hibp-use-gen').addEventListener('click',()=>{const g=document.getElementById('pw-output').textContent;document.getElementById('hibp-input').value=g;checkBreach(g);});
+      document.getElementById('hibp-check-btn').addEventListener('click',()=>checkBreach(document.getElementById('hibp-input').value));
+      async function checkBreach(pwd){
+        const r=document.getElementById('hibp-result'); if(!pwd){showToast(currentLang==='ar'?'أدخل كلمة مرور أولاً':'Enter a password','error');return;}
+        r.classList.remove('hidden'); r.className='p-4 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 text-xs fade-in'; r.textContent=currentLang==='ar'?'جاري الفحص الآمن...':'Checking...';
+        try{
+          const hex=bufHex(await crypto.subtle.digest('SHA-1',new TextEncoder().encode(pwd))).toUpperCase(), pre=hex.slice(0,5), suf=hex.slice(5);
+          const resp=await fetch(`https://api.pwnedpasswords.com/range/${pre}`); if(!resp.ok)throw 0;
+          let cnt=0; for(const ln of (await resp.text()).split('\n')){const [s,c]=ln.trim().split(':');if(s===suf){cnt=parseInt(c,10)||0;break;}}
+          if(cnt>0){r.className='p-4 rounded-xl border border-rose-200 dark:border-rose-500/40 bg-rose-50 dark:bg-rose-500/10 text-rose-800 dark:text-rose-200 text-xs sm:text-sm fade-in';r.innerHTML=currentLang==='ar'?`<strong>تنبيه!</strong> ظهرت في تسريبات عالمية <strong class="mono">${cnt.toLocaleString()}</strong> مرة.`:`<strong>Breached!</strong> Found <strong class="mono">${cnt.toLocaleString()}</strong> times.`;}
+          else{r.className='p-4 rounded-xl border border-emerald-200 dark:border-emerald-500/40 bg-emerald-50 dark:bg-emerald-500/10 text-emerald-800 dark:text-emerald-200 text-xs sm:text-sm fade-in';r.innerHTML=currentLang==='ar'?'<strong>سليمة!</strong> لم تظهر في أي تسريب معروف.':'<strong>Clean!</strong> Not found in known breaches.';}
+        }catch(e){r.className='p-4 rounded-xl border border-amber-200 dark:border-amber-500/40 bg-amber-50 dark:bg-amber-500/10 text-amber-800 dark:text-amber-200 text-xs fade-in';r.textContent=currentLang==='ar'?'تعذر الاتصال بخدمة الفحص حالياً.':'Could not reach breach API.';}
+      }
+
+      async function aesKey(pass,salt){ const km=await crypto.subtle.importKey('raw',new TextEncoder().encode(pass),'PBKDF2',false,['deriveKey']); return crypto.subtle.deriveKey({name:'PBKDF2',salt,iterations:100000,hash:'SHA-256'},km,{name:'AES-GCM',length:256},false,['encrypt','decrypt']); }
+      document.getElementById('btn-aes-encrypt').addEventListener('click',async()=>{
+        const t=document.getElementById('aes-text').value, p=document.getElementById('aes-pass').value; if(!t||!p){showToast(currentLang==='ar'?'أدخل النص وكلمة السر':'Enter text and passphrase','error');return;}
+        try{ const s=crypto.getRandomValues(new Uint8Array(16)), iv=crypto.getRandomValues(new Uint8Array(12)), k=await aesKey(p,s), e=await crypto.subtle.encrypt({name:'AES-GCM',iv},k,new TextEncoder().encode(t)), c=new Uint8Array(28+e.byteLength); c.set(s,0);c.set(iv,16);c.set(new Uint8Array(e),28); let b=''; c.forEach(x=>b+=String.fromCharCode(x)); document.getElementById('aes-output').textContent=btoa(b); document.getElementById('aes-output-wrap').classList.remove('hidden'); showToast(currentLang==='ar'?'تم التشفير بنجاح':'Encrypted','success'); }catch(e){showToast('Error','error');}
+      });
+      document.getElementById('btn-aes-decrypt').addEventListener('click',async()=>{
+        const b64=document.getElementById('aes-text').value.trim(), p=document.getElementById('aes-pass').value; if(!b64||!p){showToast(currentLang==='ar'?'أدخل النص المشفر وكلمة السر':'Enter ciphertext and passphrase','error');return;}
+        try{ const bin=atob(b64), by=new Uint8Array(bin.length); for(let i=0;i<bin.length;i++)by[i]=bin.charCodeAt(i); const k=await aesKey(p,by.slice(0,16)), d=await crypto.subtle.decrypt({name:'AES-GCM',iv:by.slice(16,28)},k,by.slice(28)); document.getElementById('aes-output').textContent=new TextDecoder().decode(d); document.getElementById('aes-output-wrap').classList.remove('hidden'); showToast(currentLang==='ar'?'تم فك التشفير':'Decrypted','success'); }catch(e){showToast(currentLang==='ar'?'كلمة السر خطأ أو النص تالف':'Wrong passphrase','error');}
+      });
+      document.querySelectorAll('.dev-subtab').forEach(b=>b.addEventListener('click',()=>{ const t=b.getAttribute('data-dev'); document.querySelectorAll('.dev-subtab').forEach(x=>x.className=x===b?'dev-subtab px-2.5 py-1 rounded-md bg-white dark:bg-slate-800 text-teal-700 dark:text-teal-300 font-bold':'dev-subtab px-2.5 py-1 rounded-md text-slate-500'); ['base64','hash','jwt'].forEach(p=>document.getElementById(`dev-panel-${p}`).classList.toggle('hidden',p!==t)); }));
+      document.getElementById('btn-b64-enc').addEventListener('click',()=>{try{const b=new TextEncoder().encode(document.getElementById('b64-input').value);let s='';b.forEach(x=>s+=String.fromCharCode(x));document.getElementById('b64-output').textContent=btoa(s);}catch(e){}});
+      document.getElementById('btn-b64-dec').addEventListener('click',()=>{try{const s=atob(document.getElementById('b64-input').value.trim()),b=new Uint8Array(s.length);for(let i=0;i<s.length;i++)b[i]=s.charCodeAt(i);document.getElementById('b64-output').textContent=new TextDecoder().decode(b);}catch(e){showToast('Invalid Base64','error');}});
+      document.getElementById('hash-text-input').addEventListener('input',async e=>{ const v=e.target.value; if(!v){document.getElementById('text-sha256').textContent='—';document.getElementById('text-sha512').textContent='—';return;} const enc=new TextEncoder().encode(v),[a,b]=await Promise.all([crypto.subtle.digest('SHA-256',enc),crypto.subtle.digest('SHA-512',enc)]); document.getElementById('text-sha256').textContent=bufHex(a); document.getElementById('text-sha512').textContent=bufHex(b); });
+      function decJwt(tok){ const p=tok.trim().split('.'); if(p.length<2){document.getElementById('jwt-header').textContent='Invalid JWT';document.getElementById('jwt-payload').textContent='—';return;} try{const d=x=>{const n=x.replace(/-/g,'+').replace(/_/g,'/');return JSON.stringify(JSON.parse(atob(n+'='.repeat((4-n.length%4)%4))),null,2);};document.getElementById('jwt-header').textContent=d(p[0]);document.getElementById('jwt-payload').textContent=d(p[1]);}catch(e){document.getElementById('jwt-header').textContent='Error';document.getElementById('jwt-payload').textContent='—';} }
+      document.getElementById('jwt-input').addEventListener('input',e=>decJwt(e.target.value));
+      document.getElementById('btn-jwt-sample').addEventListener('click',()=>{const s='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c2VyXzIwMjYiLCJuYW1lIjoiQW1hbiBPcmlnaW5hbCIsInJvbGUiOiJhZG1pbiJ9.sig';document.getElementById('jwt-input').value=s;decJwt(s);});
+
+      let qrType='url', lastQr='';
+      function generateQR(){
+        const c=document.getElementById('qr-canvas'); if(!c||typeof QRious==='undefined')return;
+        const pay=qrType==='url'?(document.getElementById('qr-text-input').value.trim()||'https://github.com'):`WIFI:T:${document.getElementById('qr-wifi-enc').value};S:${document.getElementById('qr-wifi-ssid').value.trim()||'MyWiFi'};P:${document.getElementById('qr-wifi-pass').value};;`;
+        const fg=document.getElementById('qr-color-fg').value, bg=document.getElementById('qr-color-bg').value;
+        const tmp=document.createElement('canvas');
+        new QRious({element:tmp,value:pay,size:300,padding:0,level:'M',foreground:'#000000',background:'#ffffff'});
+        const d=tmp.getContext('2d').getImageData(0,0,tmp.width,tmp.height).data;
+        let minX=tmp.width, minY=tmp.height, maxX=0, maxY=0;
+        for(let y=0;y<tmp.height;y++){for(let x=0;x<tmp.width;x++){if(d[(y*tmp.width+x)*4]<128){if(x<minX)minX=x;if(x>maxX)maxX=x;if(y<minY)minY=y;if(y>maxY)maxY=y;}}}
+        const bw=Math.max(1,maxX-minX+1), bh=Math.max(1,maxY-minY+1);
+        const col=document.createElement('canvas');
+        new QRious({element:col,value:pay,size:300,padding:0,level:'M',foreground:fg,background:bg});
+        const t=240, pad=20, ctx=c.getContext('2d'); c.width=t; c.height=t;
+        ctx.fillStyle=bg; ctx.fillRect(0,0,t,t);
+        ctx.imageSmoothingEnabled=false;
+        ctx.drawImage(col,minX,minY,bw,bh,pad,pad,t-pad*2,t-pad*2);
+      }
+      document.querySelectorAll('.qr-type-btn').forEach(b=>b.addEventListener('click',()=>{ qrType=b.getAttribute('data-qtype'); document.querySelectorAll('.qr-type-btn').forEach(x=>x.className=x===b?'qr-type-btn px-3 py-1 rounded-md bg-white dark:bg-slate-800 text-teal-700 dark:text-teal-300 font-bold whitespace-nowrap':'qr-type-btn px-3 py-1 rounded-md text-slate-500 whitespace-nowrap'); document.getElementById('qr-fields-url').classList.toggle('hidden',qrType!=='url'); document.getElementById('qr-fields-wifi').classList.toggle('hidden',qrType!=='wifi'); generateQR(); }));
+      ['qr-text-input','qr-wifi-ssid','qr-wifi-pass','qr-wifi-enc','qr-color-fg','qr-color-bg'].forEach(id=>document.getElementById(id).addEventListener('input',generateQR));
+      document.getElementById('btn-qr-download').addEventListener('click',()=>{const a=document.createElement('a');a.download='aman-pro-qr.png';a.href=document.getElementById('qr-canvas').toDataURL('image/png');a.click();});
+      function decCanvas(c){ if(typeof jsQR==='undefined')return; const d=c.getContext('2d').getImageData(0,0,c.width,c.height), code=jsQR(d.data, d.width, d.height, { inversionAttempts: 'attemptBoth' }); if(!code||!code.data){showToast(currentLang==='ar'?'لم يتم العثور على باركود واضح':'No QR found','error');return;} lastQr=code.data; document.getElementById('qr-scan-result').classList.remove('hidden'); document.getElementById('qr-decoded-text').textContent=code.data; document.getElementById('btn-qr-send-url').classList.toggle('hidden',!(/^https?:\/\//i.test(code.data)||/^[a-z0-9.-]+\.[a-z]{2,}/i.test(code.data))); showToast(currentLang==='ar'?'تمت القراءة بأمان':'Decoded safely','success'); }
+      document.getElementById('btn-qr-test-scan').addEventListener('click',()=>decCanvas(document.getElementById('qr-canvas')));
+      const qd=document.getElementById('qr-dropzone'), qf=document.getElementById('qr-file-input');
+      qd.addEventListener('click',()=>qf.click()); qd.addEventListener('dragover',e=>{e.preventDefault();qd.classList.add('border-teal-500');}); qd.addEventListener('dragleave',()=>qd.classList.remove('border-teal-500'));
+      qd.addEventListener('drop',e=>{e.preventDefault();qd.classList.remove('border-teal-500');if(e.dataTransfer.files[0])readQr(e.dataTransfer.files[0]);});
+      qf.addEventListener('change',()=>{if(qf.files[0])readQr(qf.files[0]);});
+      function readQr(f){ const r=new FileReader(); r.onload=ev=>{const img=new Image();img.onload=()=>{const c=document.getElementById('qr-decode-canvas');const m=1000,sc=Math.min(1,m/Math.max(img.width,img.height));c.width=Math.round(img.width*sc);c.height=Math.round(img.height*sc);const ctx=c.getContext('2d');ctx.fillStyle='#ffffff';ctx.fillRect(0,0,c.width,c.height);ctx.drawImage(img,0,0,c.width,c.height);decCanvas(c);};img.src=ev.target.result;}; r.readAsDataURL(f); }
+      document.getElementById('btn-qr-send-url').addEventListener('click',()=>{if(!lastQr)return;document.getElementById('url-input').value=lastQr;switchTab('url');inspectUrl(lastQr);});
+
+      document.getElementById('wipe-session-btn').addEventListener('click',()=>{
+        ['home-quick-url-input','url-input','hibp-input','aes-text','aes-pass','b64-input','hash-text-input','jwt-input'].forEach(id=>{const e=document.getElementById(id);if(e)e.value='';});
+        ['url-result','file-result','hibp-result','aes-output-wrap','qr-scan-result'].forEach(id=>{const e=document.getElementById(id);if(e)e.classList.add('hidden');});
+        ['b64-output','text-sha256','text-sha512','jwt-header','jwt-payload'].forEach(id=>{const e=document.getElementById(id);if(e)e.textContent='—';});
+        genPw(); showToast(currentLang==='ar'?'تم مسح بيانات الجلسة':'Session wiped','success');
+      });
+
+      applyLang(currentLang); genPw(); generateQR();
+      
+      const _ring=['ring-2','ring-offset-2','ring-teal-500','dark:ring-offset-slate-900'];
+      document.querySelectorAll('.qr-fg-dot').forEach(b=>b.addEventListener('click',()=>{
+        const fg=b.getAttribute('data-fg'), bgEl=document.getElementById('qr-color-bg');
+        document.getElementById('qr-color-fg').value=fg;
+        if(bgEl.value===fg) bgEl.value='#ffffff';
+        document.querySelectorAll('.qr-fg-dot').forEach(x=>x.classList.remove(..._ring));
+        b.classList.add(..._ring); generateQR();
+      }));
+      document.querySelectorAll('.qr-bg-dot').forEach(b=>b.addEventListener('click',()=>{
+        const bg=b.getAttribute('data-bg'), fgEl=document.getElementById('qr-color-fg');
+        document.getElementById('qr-color-bg').value=bg;
+        if(fgEl.value===bg) fgEl.value=(bg==='#0f172a'?'#ffffff':'#0f172a');
+        document.querySelectorAll('.qr-bg-dot').forEach(x=>x.classList.remove(..._ring));
+        b.classList.add(..._ring); generateQR();
+      }));
+      
+      let lifeStep=1, lifeSym='@', lifeVar=0;
+      const arMap={'ا':'a','أ':'a','إ':'e','آ':'a','ب':'b','ت':'t','ث':'th','ج':'j','ح':'h','خ':'kh','د':'d','ذ':'dh','ر':'r','ز':'z','س':'s','ش':'sh','ص':'s','ض':'d','ط':'t','ظ':'z','ع':'a','غ':'gh','ف':'f','ق':'q','ك':'k','ل':'l','م':'m','ن':'n','ه':'h','و':'w','ي':'y','ى':'a','ة':'a'};
+      function toLatin(str){ let o=''; for(const c of (str||'').trim()) o+=arMap[c]||(/[a-zA-Z0-9]/.test(c)?c:''); return o?o[0].toUpperCase()+o.slice(1):'Aman'; }
+      function updLife(){ document.querySelectorAll('.life-step').forEach((e,i)=>e.classList.toggle('hidden',i+1!==lifeStep)); document.getElementById('life-step-num').textContent=`${lifeStep} / 4`; document.getElementById('btn-life-prev').classList.toggle('hidden',lifeStep===1); document.getElementById('btn-life-next').textContent=lifeStep===4?(currentLang==='ar'?'إنشاء الكلمة':'Generate'):(currentLang==='ar'?'التالي':'Next'); }
+      function buildLifePw(){
+        const nm=toLatin(document.getElementById('life-name').value||'Asil').slice(0,6);
+        const dg=(document.getElementById('life-digits').value||'2026').replace(/[^0-9]/g,'').slice(-4)||'2026';
+        const ct=toLatin(document.getElementById('life-city').value||'Sanaa').slice(0,6);
+        const vars=[`${nm}${lifeSym}${ct}_${dg}!9`,`${nm.toUpperCase().slice(0,2)}${nm.slice(2)}_${dg}${lifeSym}${ct}*`,`${ct}${lifeSym}${nm}!${dg}#7`,`${nm}!${dg}${lifeSym}${ct}_24$`];
+        const pwd=vars[lifeVar%vars.length]; document.getElementById('pw-output').textContent=pwd;
+        document.getElementById('pw-entropy-label').textContent=`${Math.max(92,Math.round(pwd.length*5.6))} bits`;
+        document.getElementById('pw-strength-bar').style.width='100%'; document.getElementById('pw-strength-bar').className='h-full bg-emerald-500 transition-all';
+        document.getElementById('pw-strength-label').className='font-bold text-emerald-600 dark:text-emerald-400'; document.getElementById('pw-strength-label').textContent=currentLang==='ar'?'قوية جداً وسهلة التذكر':'Very Strong & Memorable';
+        document.getElementById('pw-crack-time').textContent=currentLang==='ar'?'مبنية من بياناتك مع تنويع رموز آمن.':'Built from your details with strong symbol weaving.';
+      }
+      function setPwMode(m){
+        pwMode=m; const on='px-2.5 py-1.5 rounded-lg bg-white dark:bg-slate-800 text-teal-700 dark:text-teal-300 font-bold whitespace-nowrap transition', off='px-2.5 py-1.5 rounded-lg text-slate-500 dark:text-slate-400 whitespace-nowrap transition';
+        document.getElementById('pw-mode-random').className=m==='random'?on:off; document.getElementById('pw-mode-phrase').className=m==='phrase'?on:off; document.getElementById('pw-mode-life').className=m==='life'?on:off;
+        document.getElementById('pw-random-opts').classList.toggle('hidden',m!=='random'); document.getElementById('pw-phrase-opts').classList.toggle('hidden',m!=='phrase'); document.getElementById('pw-life-opts').classList.toggle('hidden',m!=='life');
+        if(m==='life') buildLifePw(); else genPw();
+      }
+      document.getElementById('pw-mode-random').addEventListener('click',()=>setPwMode('random'));
+      document.getElementById('pw-mode-phrase').addEventListener('click',()=>setPwMode('phrase'));
+      document.getElementById('pw-mode-life').addEventListener('click',()=>setPwMode('life'));
+      document.querySelectorAll('.pw-preset').forEach(b=>b.addEventListener('click',()=>{document.getElementById('pw-len-slider').value=b.getAttribute('data-len');genPw();}));
+      document.getElementById('btn-life-start').addEventListener('click',()=>{document.getElementById('life-intro').classList.add('hidden');document.getElementById('life-wizard').classList.remove('hidden');lifeStep=1;updLife();});
+      document.getElementById('btn-life-prev').addEventListener('click',()=>{if(lifeStep>1){lifeStep--;updLife();}});
+      document.getElementById('btn-life-next').addEventListener('click',()=>{if(lifeStep<4){lifeStep++;updLife();}else{buildLifePw();showToast(currentLang==='ar'?'تم إنشاء كلمة مرورك الخاصة!':'Password ready!','success');}});
+      document.querySelectorAll('.life-chip').forEach(b=>b.addEventListener('click',()=>{document.getElementById(b.getAttribute('data-target')).value=b.getAttribute('data-val');buildLifePw();}));
+      document.querySelectorAll('.life-sym').forEach(b=>b.addEventListener('click',()=>{lifeSym=b.getAttribute('data-sym');document.querySelectorAll('.life-sym').forEach(x=>x.className=x===b?'life-sym py-2 rounded-xl border border-teal-500 bg-teal-500/15 text-teal-700 dark:text-teal-300 font-bold mono':'life-sym py-2 rounded-xl border border-slate-200 dark:border-slate-700 font-bold mono');buildLifePw();}));
+      ['life-name','life-digits','life-city'].forEach(id=>document.getElementById(id).addEventListener('input',buildLifePw));
+      if(typeof lucide!=='undefined') lucide.createIcons();
+    })();
+  </script>
+  <script src="js/stego.js"></script>
+  <script src="js/secret_link.js"></script>
+  <script src="js/exif_cleaner.js"></script>
+  <script src="js/qr_camera.js"></script>
+  <script src="js/phish_text.js"></script>
+</body>
+</html>

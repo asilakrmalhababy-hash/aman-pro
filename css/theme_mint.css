@@ -1,0 +1,153 @@
+/* ===== Aman Original — Soft Mint Cloud Theme (All Views) ===== */
+body {
+  background: radial-gradient(circle at top right, #f4fbf8 0%, #e7f4ef 55%, #dff0ea 100%) !important;
+  color: #09362e !important;
+}
+html.dark body {
+  background: radial-gradient(circle at top right, #0d221e 0%, #071311 60%, #050d0c 100%) !important;
+  color: #e2f1ec !important;
+}
+
+/* Header & Floating Circles */
+.mint-header {
+  background: rgba(235, 247, 243, 0.92) !important;
+  backdrop-filter: blur(14px);
+}
+html.dark .mint-header {
+  background: rgba(7, 19, 17, 0.92) !important;
+  border-bottom: 1px solid rgba(45, 212, 191, 0.12) !important;
+}
+.mint-circle-btn {
+  background: #ffffff !important;
+  color: #0d5c4d !important;
+  box-shadow: 0 5px 16px -4px rgba(13, 92, 77, 0.16);
+}
+.mint-circle-btn:hover { transform: translateY(-1px); }
+html.dark .mint-circle-btn {
+  background: #0f2420 !important;
+  color: #2dd4bf !important;
+  border: 1px solid rgba(45, 212, 191, 0.2) !important;
+  box-shadow: 0 5px 16px -4px rgba(0, 0, 0, 0.5);
+}
+
+/* Sidebar */
+#sidebar {
+  background: #ffffff !important;
+  border-color: #d6ebe3 !important;
+  box-shadow: -8px 0 30px -12px rgba(13, 92, 77, 0.12);
+}
+html.dark #sidebar {
+  background: #081714 !important;
+  border-color: rgba(45, 212, 191, 0.14) !important;
+}
+.nav-item.active {
+  background-color: #e2f4ee !important;
+  color: #0b4f43 !important;
+}
+html.dark .nav-item.active {
+  background-color: rgba(45, 212, 191, 0.14) !important;
+  color: #2dd4bf !important;
+}
+
+/* Search Pill & All Cards Across Every Tab */
+.mint-search-pill {
+  background: #ffffff !important;
+  border: 1.5px solid #cde4dc !important;
+  box-shadow: 0 10px 28px -10px rgba(13, 92, 77, 0.15);
+}
+.mint-search-pill:focus-within { border-color: #0d5c4d !important; }
+html.dark .mint-search-pill {
+  background: #0d1f1c !important;
+  border-color: rgba(45, 212, 191, 0.25) !important;
+  box-shadow: 0 10px 28px -10px rgba(0, 0, 0, 0.6);
+}
+
+.mint-card,
+.tab-panel > div.bg-white,
+.tab-panel .grid > div.bg-white,
+#help-modal > div {
+  background: #ffffff !important;
+  border-radius: 26px !important;
+  border: 1px solid rgba(206, 232, 223, 0.75) !important;
+  box-shadow: 0 12px 30px -10px rgba(13, 92, 77, 0.12) !important;
+}
+.mint-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 16px 34px -10px rgba(13, 92, 77, 0.18) !important;
+}
+html.dark .mint-card,
+html.dark .tab-panel > div.bg-white,
+html.dark .tab-panel .grid > div.bg-white,
+html.dark #help-modal > div {
+  background: #0e211d !important;
+  border: 1px solid rgba(45, 212, 191, 0.15) !important;
+  box-shadow: 0 12px 28px -10px rgba(0, 0, 0, 0.55) !important;
+}
+
+/* Unified Inputs, Textareas & Selects */
+.tab-panel input[type="text"],
+.tab-panel input[type="password"],
+.tab-panel textarea,
+.tab-panel select {
+  background-color: #f3faf7 !important;
+  border-color: #cce3db !important;
+  color: #09362e !important;
+  border-radius: 16px !important;
+}
+.tab-panel input:focus,
+.tab-panel textarea:focus,
+.tab-panel select:focus {
+  border-color: #0b4f43 !important;
+  box-shadow: 0 0 0 3px rgba(11, 79, 67, 0.12);
+}
+html.dark .tab-panel input[type="text"],
+html.dark .tab-panel input[type="password"],
+html.dark .tab-panel textarea,
+html.dark .tab-panel select {
+  background-color: #071512 !important;
+  border-color: rgba(45, 212, 191, 0.22) !important;
+  color: #ecfdf5 !important;
+}
+
+/* Unified Forest Teal Primary Buttons */
+.bg-teal-600 {
+  background-color: #0b4f43 !important;
+  box-shadow: 0 8px 20px -6px rgba(11, 79, 67, 0.35);
+}
+.bg-teal-600:hover { background-color: #0d5c4d !important; }
+html.dark .bg-teal-600 {
+  background-color: #14b8a6 !important;
+  color: #042f2e !important;
+}
+html.dark .bg-teal-600:hover { background-color: #2dd4bf !important; }
+
+/* Dropzones & Inner Soft Surfaces */
+#file-dropzone, #qr-dropzone, #enc-file-drop {
+  background: #f1faf6 !important;
+  border-color: #9ec9bb !important;
+  border-radius: 22px !important;
+}
+html.dark #file-dropzone, html.dark #qr-dropzone, html.dark #enc-file-drop {
+  background: #081815 !important;
+  border-color: rgba(45, 212, 191, 0.28) !important;
+}
+
+/* Fix Chrome/Google autofill white background */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+textarea:-webkit-autofill {
+  -webkit-box-shadow: 0 0 0 1000px #f3faf7 inset !important;
+  -webkit-text-fill-color: #09362e !important;
+  caret-color: #09362e !important;
+  transition: background-color 5000s ease-in-out 0s;
+}
+html.dark input:-webkit-autofill,
+html.dark input:-webkit-autofill:hover,
+html.dark input:-webkit-autofill:focus,
+html.dark textarea:-webkit-autofill {
+  -webkit-box-shadow: 0 0 0 1000px #071512 inset !important;
+  -webkit-text-fill-color: #ecfdf5 !important;
+  caret-color: #2dd4bf !important;
+  transition: background-color 5000s ease-in-out 0s;
+}

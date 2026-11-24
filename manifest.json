@@ -1,0 +1,11 @@
+{
+  "name": "أمان Pro — منظومة الأمان الرقمي",
+  "short_name": "أمان Pro",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#071311",
+  "theme_color": "#0B4F43",
+  "icons": [
+    { "src": "assets/logo.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ]
+}
