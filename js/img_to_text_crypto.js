@@ -37,17 +37,16 @@
     return new Promise(resolve => {
       const c = document.createElement('canvas');
       const ctx = c.getContext('2d');
-      const presets = targetMaxBytes <= 3500
+      const presets = targetMaxBytes <= 12000
         ? [
-            { maxDim: 260, q: 0.48 },
-            { maxDim: 220, q: 0.40 },
-            { maxDim: 180, q: 0.34 },
-            { maxDim: 150, q: 0.28 }
+            { maxDim: 680, q: 0.72 },
+            { maxDim: 560, q: 0.64 },
+            { maxDim: 480, q: 0.56 }
           ]
         : [
-            { maxDim: 520, q: 0.62 },
-            { maxDim: 420, q: 0.52 },
-            { maxDim: 340, q: 0.45 }
+            { maxDim: 1080, q: 0.82 },
+            { maxDim: 900, q: 0.75 },
+            { maxDim: 760, q: 0.68 }
           ];
 
       let idx = 0;
@@ -102,8 +101,8 @@
           <p id="itx-lbl" class="text-xs sm:text-sm font-bold text-slate-800 dark:text-white">اضغط لاختيار صورة لتحويلها لنص مشفّر</p>
         </div>
         <div class="grid grid-cols-2 gap-2 text-xs font-bold">
-          <button type="button" id="itx-q-compact" class="p-2.5 rounded-xl border border-teal-500 bg-teal-500/15 text-teal-600 dark:text-teal-300 transition">مضغوط جداً (~2500 حرف)</button>
-          <button type="button" id="itx-q-clear" class="p-2.5 rounded-xl border border-slate-300 dark:border-slate-700 text-slate-500 transition">جودة أعلى (~8000 حرف)</button>
+          <button type="button" id="itx-q-compact" class="p-2.5 rounded-xl border border-teal-500 bg-teal-500/15 text-teal-600 dark:text-teal-300 transition">واضحة (~12 ألف حرف)</button>
+          <button type="button" id="itx-q-clear" class="p-2.5 rounded-xl border border-slate-300 dark:border-slate-700 text-slate-500 transition">دقة HD (~35 ألف حرف)</button>
         </div>
         <input id="itx-pass-e" type="password" class="w-full p-3 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-sm outline-none focus:border-teal-500" placeholder="كلمة سر لتشفير الصورة..." />
         <button type="button" id="itx-btn-enc" class="w-full py-3 rounded-xl bg-teal-600 hover:bg-teal-500 text-white font-bold text-sm transition">تشفير وتحويل الصورة إلى نص</button>
@@ -120,7 +119,7 @@
     cryptoPanel.appendChild(card);
 
     let loadedImg = null;
-    let targetBytes = 2400;
+    let targetBytes = 9500;
 
     const mEnc = document.getElementById('itx-m-enc'), mDec = document.getElementById('itx-m-dec');
     const bEnc = document.getElementById('itx-enc-box'), bDec = document.getElementById('itx-dec-box');
@@ -138,12 +137,12 @@
       bDec.classList.remove('hidden'); bEnc.classList.add('hidden'); out.classList.add('hidden');
     };
     qC.onclick = () => {
-      targetBytes = 2400;
+      targetBytes = 9500;
       qC.className = 'p-2.5 rounded-xl border border-teal-500 bg-teal-500/15 text-teal-600 dark:text-teal-300 transition';
       qH.className = 'p-2.5 rounded-xl border border-slate-300 dark:border-slate-700 text-slate-500 transition';
     };
     qH.onclick = () => {
-      targetBytes = 7500;
+      targetBytes = 28000;
       qH.className = 'p-2.5 rounded-xl border border-teal-500 bg-teal-500/15 text-teal-600 dark:text-teal-300 transition';
       qC.className = 'p-2.5 rounded-xl border border-slate-300 dark:border-slate-700 text-slate-500 transition';
     };
