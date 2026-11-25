@@ -1,6 +1,23 @@
 (function () {
   const AR_TO_EN = {
     'الفحص الأمني': 'Security Scan',
+    'عملياتي وسجلي الخاص': 'My Operations & Private Vault',
+    'محفوظة ومشفّرة داخل جهازك فقط — لا تفتح إلا ببصمتك.': 'Encrypted locally on your device — unlocked only by your fingerprint.',
+    'ابصم للدخول إلى سجلك الخاص وكلمات سرك': 'Scan your fingerprint to access your private history & passwords',
+    'ابصم للدخول': 'Unlock with Fingerprint',
+    'قفل ✕': 'Lock ✕',
+    'كلمات السر المحفوظة': 'Saved Passwords',
+    'سجل العمليات السابقة': 'Recent Operations',
+    'لا توجد عمليات محفوظة في سجلك بعد.': 'No saved operations yet.',
+    'مسح السجل': 'Clear All',
+    'محفوظة:': 'Saved:',
+    '⚡ إنشاء كلمة سر قوية': '⚡ Generate Strong Password',
+    'مفتاح التشفير': 'Encryption Key',
+    'إخفاء النصوص داخل الصور (مقاوم للواتساب)': 'Hide Text in Image (WhatsApp-Proof)',
+    'تقنية الكتل المقاومة لضغط JPEG — أرسلها كصورة عادية في واتساب وتشتغل 100%!': 'JPEG-resistant block tech — send as a normal WhatsApp photo!',
+    'تضمين النص وتجهيز الصورة للواتساب': 'Embed Text & Prepare for WhatsApp',
+    'استخراج الرسالة المخفية الآن': 'Extract Hidden Message Now',
+
     'مركز الفحص الأمني': 'Security Scan',
     'التشفير والخصوصية': 'Encryption & Privacy',
     'فحص الروابط': 'URL Inspector',
@@ -221,6 +238,7 @@
     applyExtraTranslations();
     const obs = new MutationObserver(() => setTimeout(applyExtraTranslations, 30));
     obs.observe(document.documentElement, { attributes: true, attributeFilter: ['lang', 'dir'] });
+    document.addEventListener('click', () => setTimeout(applyExtraTranslations, 60));
   }
 
   window.addEventListener('load', () => setTimeout(initNavHubs, 60));
