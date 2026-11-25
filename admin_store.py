@@ -1,3 +1,4 @@
+import ssl
 import os, re, secrets, sqlite3, time
 from contextlib import contextmanager
 from datetime import datetime, timedelta
@@ -74,7 +75,7 @@ class _DB:
 def _get_conn():
     if USE_TIDB:
         if pymysql is None: raise RuntimeError("PyMySQL missing")
-        ssl_cfg = {"ca": certifi.where()} if certifi else {"ssl": {}}
+        ssl_cfg = ssl.create_default_context(cafile=certifi.where()) if certifi else ssl.create_default_context()
         conn = pymysql.connect(
             host=os.environ["TIDB_HOST"].strip(),
             port=int(os.environ.get("TIDB_PORT", "4000")),

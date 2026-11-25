@@ -1,6 +1,9 @@
 import threading, secrets as _secrets, http.cookies as _cookies
 import admin_store
-admin_store.init_db()
+try:
+    admin_store.init_db()
+except Exception as _e:
+    print('DB init warning:', _e, flush=True)
 import os
 import http.server, json, os, socket, ssl, urllib.request, urllib.error, base64
 from urllib.parse import urlparse
