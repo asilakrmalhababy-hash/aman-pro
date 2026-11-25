@@ -222,6 +222,8 @@
           if (pw && passInp) {
             passInp.value = pw;
             passInp.dispatchEvent(new Event('input', { bubbles: true }));
+            const cpBtn = document.getElementById('aman-copy-filled-pw');
+            if (cpBtn) cpBtn.classList.remove('hidden');
           }
         });
       });
@@ -372,7 +374,10 @@
         wrap.id = 'aman-pw-popover-wrap';
         wrap.className = 'hidden relative mt-2';
         wrap.innerHTML = `
-          <button type="button" id="aman-pw-pop-btn" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[11px] font-bold bg-teal-500/12 text-teal-600 dark:text-teal-300 border border-teal-500/25 hover:bg-teal-500/20 transition"></button>
+          <div class="flex items-center gap-2 flex-wrap">
+            <button type="button" id="aman-pw-pop-btn" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[11px] font-bold bg-teal-500/12 text-teal-600 dark:text-teal-300 border border-teal-500/25 hover:bg-teal-500/20 transition"></button>
+            <button type="button" id="aman-copy-filled-pw" class="hidden inline-flex items-center gap-1 px-3 py-1.5 rounded-xl text-[11px] font-bold bg-slate-200/70 dark:bg-slate-800 text-slate-700 dark:text-teal-300 border border-slate-300/60 dark:border-teal-800/60 hover:bg-teal-500/20 transition">📋 نسخ كلمة السر</button>
+          </div>
           <div id="aman-pw-pop-menu" class="hidden absolute right-0 mt-1.5 w-64 p-1.5 rounded-2xl bg-white dark:bg-[#0B1E1A] border border-slate-200 dark:border-teal-800/70 shadow-2xl z-50 space-y-1"></div>`;
         passInp.parentNode.insertBefore(wrap, passInp.nextSibling);
 
@@ -380,6 +385,19 @@
           e.stopPropagation();
           document.getElementById('aman-pw-pop-menu').classList.toggle('hidden');
         });
+        const cpBtn = document.getElementById('aman-copy-filled-pw');
+        if (cpBtn) {
+          cpBtn.addEventListener('click', async () => {
+            if (!passInp.value) return;
+            try { await navigator.clipboard.writeText(passInp.value); } catch (_) {}
+            const en = document.documentElement.lang === 'en' || document.documentElement.dir === 'ltr';
+            cpBtn.textContent = en ? '✓ Copied!' : '✓ تم النسخ!';
+            setTimeout(() => { cpBtn.textContent = en ? '📋 Copy Password' : '📋 نسخ كلمة السر'; }, 2200);
+          });
+          passInp.addEventListener('input', () => {
+            cpBtn.classList.toggle('hidden', !passInp.value);
+          });
+        }
         document.addEventListener('click', () => {
           const m = document.getElementById('aman-pw-pop-menu');
           if (m) m.classList.add('hidden');
