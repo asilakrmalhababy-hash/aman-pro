@@ -57,8 +57,8 @@
         const cred = await navigator.credentials.create({
           publicKey: {
             challenge,
-            rp: { name: 'Aman Pro', id: location.hostname || 'localhost' },
-            user: { id: userId, name: 'aman-user', displayName: 'Aman Pro User' },
+            rp: { name: 'Aman zoro', id: location.hostname || 'localhost' },
+            user: { id: userId, name: 'aman-user', displayName: 'Aman zoro User' },
             pubKeyCredParams: [{ type: 'public-key', alg: -7 }, { type: 'public-key', alg: -257 }],
             authenticatorSelection: { authenticatorAttachment: 'platform', userVerification: 'required' },
             timeout: 60000

@@ -69,7 +69,7 @@
       const comb = new Uint8Array(28 + enc.length); comb.set(salt, 0); comb.set(iv, 16); comb.set(enc, 28);
       const url = `${location.origin}${location.pathname}#secret=${b64uEnc(comb)}`;
       document.getElementById('sl-out-url').textContent = url;
-      document.getElementById('btn-sl-wa').href = `https://wa.me/?text=${encodeURIComponent('أرسلت لك رسالة سرية مشفرة عبر أمان Pro:\n' + url)}`;
+      document.getElementById('btn-sl-wa').href = `https://wa.me/?text=${encodeURIComponent('أرسلت لك رسالة سرية مشفرة عبر أمان zoro:\n' + url)}`;
       document.getElementById('sl-out-wrap').classList.remove('hidden');
     });
 
