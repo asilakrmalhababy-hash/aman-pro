@@ -1,6 +1,11 @@
 (function () {
   const AR_TO_EN = {
     'الفحص الأمني': 'Security Scan',
+    'فحص المتصفح والخصوصية': 'Browser Privacy Audit',
+    'فاحص خصوصية المتصفح وبصمة الجهاز': 'Browser Privacy & Fingerprint Audit',
+    'بدء فحص المتصفح الآن': 'Start Browser Audit Now',
+    'إعادة الفحص الآن': 'Re-run Audit Now',
+
     'عملياتي وسجلي الخاص': 'My Operations & Private Vault',
     'محفوظة ومشفّرة داخل جهازك فقط — لا تفتح إلا ببصمتك.': 'Encrypted locally on your device — unlocked only by your fingerprint.',
     'ابصم للدخول إلى سجلك الخاص وكلمات سرك': 'Scan your fingerprint to access your private history & passwords',
