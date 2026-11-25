@@ -85,6 +85,15 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             ua = (self.headers.get("User-Agent") or "").lower()
             uid, is_new = self._get_uid()
             pass
+            if admin_store.is_user_banned_cached(uid, ip):
+                msg = '<html lang="ar" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head><body style="margin:0;min-height:100vh;display:flex;align-items:center;justify-content:center;background:#071311;color:#fff;font-family:system-ui;padding:24px;text-align:center;"><div style="max-width:400px;background:#0B1E1A;border:1px solid rgba(244,63,94,.4);border-radius:24px;padding:32px;"><div style="font-size:44px;margin-bottom:12px;">🚫</div><h2 style="margin:0 0 10px;color:#fb7185;">تم حظر وصولك</h2><p style="margin:0;font-size:14px;color:#94a3b8;line-height:1.7;">تم إيقاف وصول جهازك إلى منصة أمان zoro من قبل الإدارة.</p></div></body></html>'.encode("utf-8")
+                self.send_response(403)
+                self.send_header("Content-Type", "text/html; charset=utf-8")
+                self.send_header("Cache-Control", "no-store")
+                self.send_header("Content-Length", str(len(msg)))
+                self.end_headers()
+                self.wfile.write(msg)
+                return
             self._pending_uid = uid if is_new else None
             return super().do_GET()
         return super().do_GET()
@@ -108,7 +117,7 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             if uid and not admin_store.is_bot_request(ip, ua):
                 dev = admin_store.detect_device(self.headers)
                 threading.Thread(target=admin_store.track_user_event, args=(uid, ip, dev, tool), daemon=True).start()
-            return self._send_json(200, {"success": True})
+            return self._send_json(200, {"success": True, "banned": admin_store.is_user_banned_cached(uid, ip)})
         if clean_path in ("/api/admin/overview", "/api/admin/ban", "/api/admin/reset"):
             ln = int(self.headers.get("Content-Length", "0") or 0)
             body = json.loads(self.rfile.read(ln).decode("utf-8", "ignore") or "{}") if ln > 0 else {}
@@ -121,7 +130,7 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             return self._send_json(200, {"success": True, "data": admin_store.get_overview()})
         ip = self._client_ip()
         uid, _ = self._get_uid()
-        if admin_store.is_user_banned_cached(uid):
+        if admin_store.is_user_banned_cached(uid, ip):
             return self._send_json(403, {"success": False, "error": "تم حظر وصولك من قبل الإدارة."})
         pass
         ln = int(self.headers.get("Content-Length", 0))

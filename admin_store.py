@@ -180,17 +180,21 @@ def lookup_geo(ip: str) -> str:
     if label: _geo_cache[ip] = label
     return label
 
-def is_user_banned_cached(uid: str) -> bool:
-    if not uid: return False
-    now = time.time(); rec = _ban_cache.get(uid)
-    if rec and (now - rec[1]) < 20.0: return rec[0]
+def is_user_banned_cached(uid: str, ip: str = "") -> bool:
+    key = f"{uid}|{ip}"
+    if not uid and not ip: return False
+    now = time.time(); rec = _ban_cache.get(key)
+    if rec and (now - rec[1]) < 10.0: return rec[0]
     try:
         with _get_conn() as db:
-            row = db.fetchone("SELECT is_banned FROM aman_users WHERE user_id = ?", (uid,))
-            banned = bool(row and row["is_banned"] == 1)
+            row = db.fetchone(
+                "SELECT 1 FROM aman_users WHERE is_banned = 1 AND (user_id = ? OR (ip_address != '' AND ip_address = ?)) LIMIT 1",
+                (uid or "", ip or ""),
+            )
+            banned = bool(row)
     except Exception: banned = False
     if len(_ban_cache) > 3000: _ban_cache.clear()
-    _ban_cache[uid] = (banned, now)
+    _ban_cache[key] = (banned, now)
     return banned
 
 def track_user_event(uid: str, ip: str, device: str, tool_key: str = "visit"):
@@ -225,7 +229,7 @@ def verify_admin_pin(pin: str) -> bool:
     return secrets.compare_digest(str(pin or ""), os.environ.get("AMAN_ADMIN_PIN", "aman2026"))
 
 def set_user_ban(uid: str, banned: bool, reason: str = ""):
-    _ban_cache.pop(uid, None)
+    _ban_cache.clear()
     with _get_conn() as db:
         db.execute("UPDATE aman_users SET is_banned = ?, ban_reason = ? WHERE user_id = ?", (1 if banned else 0, (reason or "")[:200], uid))
         db.commit()

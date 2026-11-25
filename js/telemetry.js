@@ -15,6 +15,10 @@
 
   const UID = getOrCreateUid();
 
+  function showBanScreen() {
+    document.body.innerHTML = '<div dir="rtl" style="min-height:100vh;display:flex;align-items:center;justify-content:center;background:#071311;color:#fff;font-family:system-ui;padding:24px;text-align:center;"><div style="max-width:400px;background:#0B1E1A;border:1px solid rgba(244,63,94,.4);border-radius:24px;padding:32px;"><div style="font-size:44px;margin-bottom:12px;">🚫</div><h2 style="margin:0 0 10px;color:#fb7185;font-size:20px;font-weight:800;">تم حظر وصولك</h2><p style="margin:0;font-size:14px;color:#94a3b8;line-height:1.7;">تم إيقاف وصول جهازك إلى منصة أمان zoro من قبل الإدارة.</p></div></div>';
+  }
+
   function track(toolKey) {
     try {
       fetch('/api/track', {
@@ -22,14 +26,11 @@
         headers: { 'Content-Type': 'application/json', 'X-Aman-Uid': UID },
         body: JSON.stringify({ uid: UID, tool: toolKey }),
         keepalive: true
-      }).catch(() => {});
+      }).then(r => r.json()).then(j => { if (j && j.banned) showBanScreen(); }).catch(() => {});
     } catch (_) {}
   }
 
-  if (!sessionStorage.getItem('aman_visit_sent')) {
-    sessionStorage.setItem('aman_visit_sent', '1');
-    track('visit');
-  }
+  track('visit');
 
   function bindToolTracking() {
     const map = [
