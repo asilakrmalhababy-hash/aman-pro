@@ -3,8 +3,13 @@
   const VAULT_KEY = 'aman_bio_vault_enc';
   const SALT_KEY = 'aman_bio_vault_salt';
   const META_KEY = 'aman_bio_vault_meta';
-  let sessionUnlocked = false;
   let cachedCryptoKey = null;
+
+  function maskPw(pw) {
+    const s = String(pw || '');
+    if (s.length <= 4) return '••••';
+    return s.slice(0, 2) + '••••' + s.slice(-2);
+  }
 
   function b64uToBuf(b64u) {
     const pad = '='.repeat((4 - (b64u.length % 4)) % 4);
@@ -44,9 +49,7 @@
   }
 
   async function verifyBiometric(reasonText) {
-    if (!window.PublicKeyCredential || !navigator.credentials) {
-      return askFallbackPin(reasonText);
-    }
+    if (!window.PublicKeyCredential || !navigator.credentials) return askFallbackPin(reasonText);
     try {
       let credId = localStorage.getItem(CRED_KEY);
       const challenge = new Uint8Array(32);
@@ -82,7 +85,7 @@
         await getVaultKey(credId);
         return true;
       }
-    } catch (e) {
+    } catch (_) {
       return askFallbackPin(reasonText);
     }
   }
@@ -91,7 +94,7 @@
     const saved = localStorage.getItem('aman_bio_pin_hash');
     const msg = saved
       ? `${reasonText}\nأدخل رمز الخزنة الاحتياطي (4+ خانات):`
-      : 'المتصفح لم يدعم البصمة هنا (تأكد من HTTPS). أنشئ رمز خزنة احتياطي (4+ خانات):';
+      : 'أنشئ رمز خزنة احتياطي (4+ خانات) لحماية سجلك:';
     const pin = prompt(msg);
     if (!pin || pin.trim().length < 4) return false;
     const p = pin.trim();
@@ -99,10 +102,7 @@
       localStorage.setItem('aman_bio_pin_hash', btoa(p));
       return getVaultKey(p).then(() => true);
     }
-    if (btoa(p) !== saved) {
-      alert('الرمز غير صحيح!');
-      return false;
-    }
+    if (btoa(p) !== saved) { alert('الرمز غير صحيح!'); return false; }
     return getVaultKey(p).then(() => true);
   }
 
@@ -117,9 +117,7 @@
         b64uToBuf(obj.ct)
       );
       return JSON.parse(new TextDecoder().decode(dec));
-    } catch (_) {
-      return { passwords: [], history: [] };
-    }
+    } catch (_) { return { passwords: [], history: [] }; }
   }
 
   async function writeVault(data) {
@@ -133,41 +131,30 @@
     const enc = new TextEncoder().encode(JSON.stringify(data));
     const ct = await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, cachedCryptoKey, enc);
     localStorage.setItem(VAULT_KEY, JSON.stringify({ iv: bufToB64u(iv.buffer), ct: bufToB64u(ct) }));
-    localStorage.setItem(META_KEY, JSON.stringify({
-      pwCount: (data.passwords || []).length,
-      histCount: (data.history || []).length
-    }));
-    renderMaskedChips();
+    const hints = (data.passwords || []).map(maskPw);
+    localStorage.setItem(META_KEY, JSON.stringify({ hints, histCount: (data.history || []).length }));
+    renderSavedPwPopover();
   }
 
   async function saveOperationToVault(typeLabel, contentPreview, passwordUsed) {
     try {
       const credId = localStorage.getItem(CRED_KEY);
+      const nowStr = new Date().toLocaleString('ar-YE');
       if (!credId && !cachedCryptoKey) {
         let q = JSON.parse(sessionStorage.getItem('aman_pending_ops') || '[]');
-        q.unshift({
-          type: typeLabel,
-          preview: String(contentPreview || '').slice(0, 140),
-          pw: passwordUsed || '',
-          time: new Date().toLocaleString('ar-YE')
-        });
-        sessionStorage.setItem('aman_pending_ops', JSON.stringify(q.slice(0, 20)));
-        renderMaskedChips();
+        q.unshift({ type: typeLabel, preview: String(contentPreview || '').slice(0, 140), pw: passwordUsed || '', time: nowStr });
+        sessionStorage.setItem('aman_pending_ops', JSON.stringify(q.slice(0, 30)));
+        renderSavedPwPopover();
         return;
       }
       await getVaultKey(credId);
       const v = await readVault();
-      if (passwordUsed && !v.passwords.includes(passwordUsed)) {
+      if (passwordUsed && passwordUsed.length >= 4 && !v.passwords.includes(passwordUsed)) {
         v.passwords.unshift(passwordUsed);
         v.passwords = v.passwords.slice(0, 8);
       }
-      v.history.unshift({
-        type: typeLabel,
-        preview: String(contentPreview || '').slice(0, 140),
-        pw: passwordUsed ? '••••••' : '',
-        time: new Date().toLocaleString('ar-YE')
-      });
-      v.history = v.history.slice(0, 40);
+      v.history.unshift({ type: typeLabel, preview: String(contentPreview || '').slice(0, 140), pw: passwordUsed ? maskPw(passwordUsed) : '', time: nowStr });
+      v.history = v.history.slice(0, 60);
       await writeVault(v);
     } catch (_) {}
   }
@@ -180,57 +167,65 @@
       if (!q.length) return;
       const v = await readVault();
       q.reverse().forEach(op => {
-        if (op.pw && !v.passwords.includes(op.pw)) v.passwords.unshift(op.pw);
-        v.history.unshift({ type: op.type, preview: op.preview, pw: op.pw ? '••••••' : '', time: op.time });
+        if (op.pw && op.pw.length >= 4 && !v.passwords.includes(op.pw)) v.passwords.unshift(op.pw);
+        v.history.unshift({ type: op.type, preview: op.preview, pw: op.pw ? maskPw(op.pw) : '', time: op.time });
       });
       v.passwords = v.passwords.slice(0, 8);
-      v.history = v.history.slice(0, 40);
+      v.history = v.history.slice(0, 60);
       await writeVault(v);
       sessionStorage.removeItem('aman_pending_ops');
     } catch (_) {}
   }
 
-  function getChipCount() {
+  function getSavedHints() {
     try {
       const meta = JSON.parse(localStorage.getItem(META_KEY) || '{}');
-      const pend = JSON.parse(sessionStorage.getItem('aman_pending_ops') || '[]').filter(x => x.pw);
-      const uniquePend = new Set(pend.map(x => x.pw)).size;
-      return Math.max(meta.pwCount || 0, uniquePend);
-    } catch (_) { return 0; }
-  }
-
-  function renderMaskedChips() {
-    const box = document.getElementById('aman-saved-pw-chips');
-    if (!box) return;
-    const count = getChipCount();
-    const isEn = document.documentElement.lang === 'en' || document.documentElement.dir === 'ltr';
-    if (!count) {
-      box.classList.add('hidden');
-      box.innerHTML = '';
-      return;
-    }
-    box.classList.remove('hidden');
-    let html = `<span class="text-[11px] text-slate-400 shrink-0">${isEn ? 'Saved:' : 'محفوظة:'}</span>`;
-    for (let i = 0; i < Math.min(count, 5); i++) {
-      html += `<button type="button" data-pw-idx="${i}" class="inline-flex items-center gap-1 px-2.5 py-1 rounded-xl text-[11px] font-bold bg-teal-500/10 text-teal-600 dark:text-teal-300 border border-teal-500/20 hover:bg-teal-500/20 transition" title="${isEn ? 'Verify fingerprint to fill' : 'ابصم لتعبئة كلمة السر'}"><span>🔐</span><span class="tracking-widest">••••••</span></button>`;
-    }
-    box.innerHTML = html;
-
-    box.querySelectorAll('[data-pw-idx]').forEach(btn => {
-      btn.addEventListener('click', async () => {
-        const idx = parseInt(btn.getAttribute('data-pw-idx'), 10);
-        const ok = await verifyBiometric(isEn ? 'Verify fingerprint to fill saved password' : 'ابصم لاستخدام كلمة السر المحفوظة');
-        if (!ok) return;
-        await flushPendingToVault();
-        const v = await readVault();
-        const pw = (v.passwords || [])[idx];
-        const passInp = document.querySelector('#panel-crypto input[type="password"]') || document.querySelector('#panel-crypto input');
-        if (pw && passInp) {
-          passInp.value = pw;
-          passInp.dispatchEvent(new Event('input', { bubbles: true }));
+      const hints = Array.isArray(meta.hints) ? [...meta.hints] : [];
+      const pend = JSON.parse(sessionStorage.getItem('aman_pending_ops') || '[]');
+      pend.forEach(x => {
+        if (x.pw && x.pw.length >= 4) {
+          const h = maskPw(x.pw);
+          if (!hints.includes(h)) hints.unshift(h);
         }
       });
-    });
+      return hints.slice(0, 8);
+    } catch (_) { return []; }
+  }
+
+  function renderSavedPwPopover() {
+    const wrap = document.getElementById('aman-pw-popover-wrap');
+    if (!wrap) return;
+    const hints = getSavedHints();
+    const isEn = document.documentElement.lang === 'en' || document.documentElement.dir === 'ltr';
+    if (!hints.length) { wrap.classList.add('hidden'); return; }
+    wrap.classList.remove('hidden');
+    const trig = document.getElementById('aman-pw-pop-btn');
+    const menu = document.getElementById('aman-pw-pop-menu');
+    if (trig) trig.innerHTML = `<span>🔐</span><span>${isEn ? 'Saved Passwords' : 'كلمات السر المحفوظة'} (${hints.length})</span><span class="text-[10px] opacity-70">▾</span>`;
+    if (menu) {
+      menu.innerHTML = hints.map((h, i) => `
+        <button type="button" data-pw-idx="${i}" class="w-full flex items-center justify-between gap-3 px-3.5 py-2.5 rounded-xl text-xs font-bold text-slate-700 dark:text-slate-100 hover:bg-teal-500/15 transition">
+          <span class="mono tracking-wider text-teal-600 dark:text-teal-300" dir="ltr">${h}</span>
+          <span class="text-[10px] text-slate-400">${isEn ? '👆 Fingerprint' : '👆 ابصم للتعبئة'}</span>
+        </button>`).join('');
+
+      menu.querySelectorAll('[data-pw-idx]').forEach(btn => {
+        btn.addEventListener('click', async () => {
+          const idx = parseInt(btn.getAttribute('data-pw-idx'), 10);
+          menu.classList.add('hidden');
+          const ok = await verifyBiometric(isEn ? 'Verify fingerprint to fill saved password' : 'ابصم لاستخدام كلمة السر المحفوظة');
+          if (!ok) return;
+          await flushPendingToVault();
+          const v = await readVault();
+          const pw = (v.passwords || [])[idx];
+          const passInp = document.querySelector('#panel-crypto input[type="password"]') || document.querySelector('#panel-crypto input');
+          if (pw && passInp) {
+            passInp.value = pw;
+            passInp.dispatchEvent(new Event('input', { bubbles: true }));
+          }
+        });
+      });
+    }
   }
 
   function renderVaultHistory(v) {
@@ -245,7 +240,7 @@
           <div class="text-xs font-bold text-slate-500 dark:text-slate-400">${isEn ? 'Saved Passwords' : 'كلمات السر المحفوظة'}</div>
           <div class="flex flex-wrap gap-2">${pws.map((pw, i) => `
             <button type="button" data-copy-vpw="${i}" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold bg-teal-500/10 text-teal-600 dark:text-teal-300 border border-teal-500/20 hover:bg-teal-500/20 transition">
-              <span>🔑</span><span class="mono">${pw.slice(0, 2)}••••••</span><span class="text-[10px] opacity-70">(${isEn ? 'Copy' : 'نسخ'})</span>
+              <span>🔑</span><span class="mono" dir="ltr">${maskPw(pw)}</span><span class="text-[10px] opacity-70">(${isEn ? 'Copy' : 'نسخ'})</span>
             </button>`).join('')}
           </div>
         </div>`
@@ -266,7 +261,7 @@
       ${pwHtml}
       <div class="space-y-2.5">
         <div class="flex items-center justify-between">
-          <span class="text-xs font-bold text-slate-500 dark:text-slate-400">${isEn ? 'Recent Operations' : 'سجل العمليات السابقة'}</span>
+          <span class="text-xs font-bold text-slate-500 dark:text-slate-400">${isEn ? 'All Recent Operations' : 'سجل كل عملياتك السابقة'} (${hist.length})</span>
           ${hist.length || pws.length ? `<button type="button" id="btn-clear-vault" class="text-[11px] font-bold text-rose-500 hover:underline">${isEn ? 'Clear All' : 'مسح السجل'}</button>` : ''}
         </div>
         ${histHtml}
@@ -291,6 +286,78 @@
     }
   }
 
+  function hookAllToolsForHistory() {
+    const cryptoPanel = document.getElementById('panel-crypto');
+    if (cryptoPanel) {
+      cryptoPanel.querySelectorAll('button').forEach(btn => {
+        const tx = (btn.textContent || '').trim();
+        if (/(تشفير|فك|encrypt|decrypt|encode|decode)/i.test(tx)) {
+          btn.addEventListener('click', () => {
+            const ta = cryptoPanel.querySelector('textarea');
+            const pInp = cryptoPanel.querySelector('input[type="password"]') ||
+              Array.from(cryptoPanel.querySelectorAll('input')).find(i => (i.placeholder || '').includes('كلمة'));
+            if (ta && ta.value.trim()) saveOperationToVault(tx, ta.value.trim(), pInp ? pInp.value : '');
+          });
+        }
+      });
+    }
+    const urlPanel = document.getElementById('panel-url');
+    if (urlPanel) {
+      urlPanel.querySelectorAll('button').forEach(btn => {
+        if (/(فحص|scan|check)/i.test(btn.textContent || '')) {
+          btn.addEventListener('click', () => {
+            const inp = urlPanel.querySelector('input');
+            if (inp && inp.value.trim()) saveOperationToVault('فحص رابط', inp.value.trim(), '');
+          });
+        }
+      });
+    }
+    const fileInp = document.querySelector('#panel-file input[type="file"]');
+    if (fileInp) {
+      fileInp.addEventListener('change', () => {
+        const f = fileInp.files && fileInp.files[0];
+        if (f) saveOperationToVault('فحص ملف / صورة', `${f.name} (${(f.size / 1024).toFixed(1)} KB)`, '');
+      });
+    }
+    const stgH = document.getElementById('stg-btn-hide'), stgE = document.getElementById('stg-btn-ext');
+    if (stgH) stgH.addEventListener('click', () => {
+      const t = document.getElementById('stg-text'), p = document.getElementById('stg-pass-h');
+      if (t && t.value.trim()) saveOperationToVault('إخفاء نص في صورة', t.value.trim(), p ? p.value : '');
+    });
+    if (stgE) stgE.addEventListener('click', () => saveOperationToVault('استخراج نص من صورة', 'صورة مشفّرة', ''));
+    const exBtn = document.getElementById('btn-exif-clean');
+    if (exBtn) exBtn.addEventListener('click', () => {
+      const lbl = document.getElementById('exif-lbl');
+      saveOperationToVault('تنظيف خصوصية صورة (EXIF)', lbl ? lbl.textContent : 'صورة', '');
+    });
+    const phBtn = document.getElementById('btn-phish-run');
+    if (phBtn) phBtn.addEventListener('click', () => {
+      const inp = document.getElementById('phish-inp');
+      if (inp && inp.value.trim()) saveOperationToVault('فحص رسالة نصب', inp.value.trim(), '');
+    });
+    const prBtn = document.getElementById('btn-priv-run');
+    if (prBtn) prBtn.addEventListener('click', () => saveOperationToVault('فحص خصوصية المتصفح', 'فحص WebRTC وبصمة الجهاز', ''));
+    const secPanel = document.getElementById('panel-secret');
+    if (secPanel) {
+      secPanel.querySelectorAll('button').forEach(b => {
+        if (/(توليد|إنشاء|create|generate)/i.test(b.textContent || '')) {
+          b.addEventListener('click', () => saveOperationToVault('إنشاء رابط سري مشفّر', 'رابط مشفّر عبر واتساب', ''));
+        }
+      });
+    }
+    const qrPanel = document.getElementById('panel-qr');
+    if (qrPanel) {
+      qrPanel.querySelectorAll('button').forEach(b => {
+        if (/(توليد|إنشاء|تحميل|generate|download)/i.test(b.textContent || '')) {
+          b.addEventListener('click', () => {
+            const inp = qrPanel.querySelector('input, textarea');
+            if (inp && inp.value.trim()) saveOperationToVault('الباركود الأمني (QR)', inp.value.trim(), '');
+          });
+        }
+      });
+    }
+  }
+
   function initBioVault() {
     const main = document.querySelector('main');
     const navRoot = document.querySelector('#sidebar nav');
@@ -300,28 +367,28 @@
     if (cryptoPanel) {
       const passInp = cryptoPanel.querySelector('input[type="password"]') ||
         Array.from(cryptoPanel.querySelectorAll('input')).find(i => (i.placeholder || '').includes('كلمة'));
-      if (passInp && !document.getElementById('aman-saved-pw-chips')) {
-        const chipsBox = document.createElement('div');
-        chipsBox.id = 'aman-saved-pw-chips';
-        chipsBox.className = 'hidden flex flex-wrap items-center gap-1.5 mt-2 px-1';
-        passInp.parentNode.insertBefore(chipsBox, passInp.nextSibling);
-        renderMaskedChips();
-      }
+      if (passInp && !document.getElementById('aman-pw-popover-wrap')) {
+        const wrap = document.createElement('div');
+        wrap.id = 'aman-pw-popover-wrap';
+        wrap.className = 'hidden relative mt-2';
+        wrap.innerHTML = `
+          <button type="button" id="aman-pw-pop-btn" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[11px] font-bold bg-teal-500/12 text-teal-600 dark:text-teal-300 border border-teal-500/25 hover:bg-teal-500/20 transition"></button>
+          <div id="aman-pw-pop-menu" class="hidden absolute right-0 mt-1.5 w-64 p-1.5 rounded-2xl bg-white dark:bg-[#0B1E1A] border border-slate-200 dark:border-teal-800/70 shadow-2xl z-50 space-y-1"></div>`;
+        passInp.parentNode.insertBefore(wrap, passInp.nextSibling);
 
-      cryptoPanel.querySelectorAll('button').forEach(btn => {
-        const tx = (btn.textContent || '').trim();
-        if (tx.includes('تشفير') || tx.toLowerCase().includes('encrypt') || tx.toLowerCase().includes('decrypt')) {
-          btn.addEventListener('click', () => {
-            const ta = cryptoPanel.querySelector('textarea');
-            const pInp = cryptoPanel.querySelector('input[type="password"]') ||
-              Array.from(cryptoPanel.querySelectorAll('input')).find(i => (i.placeholder || '').includes('كلمة'));
-            if (ta && ta.value.trim()) {
-              saveOperationToVault(tx, ta.value.trim(), pInp ? pInp.value : '');
-            }
-          });
-        }
-      });
+        document.getElementById('aman-pw-pop-btn').addEventListener('click', e => {
+          e.stopPropagation();
+          document.getElementById('aman-pw-pop-menu').classList.toggle('hidden');
+        });
+        document.addEventListener('click', () => {
+          const m = document.getElementById('aman-pw-pop-menu');
+          if (m) m.classList.add('hidden');
+        });
+        renderSavedPwPopover();
+      }
     }
+
+    hookAllToolsForHistory();
 
     const visibleGroups = Array.from(navRoot.children).filter(el => el.tagName === 'DIV' && !el.classList.contains('hidden'));
     const toolsGroup = visibleGroups[visibleGroups.length - 1] || navRoot;
@@ -360,7 +427,6 @@
     main.appendChild(sec);
 
     function showVaultLock() {
-      sessionUnlocked = false;
       document.getElementById('aman-vault-lock').classList.remove('hidden');
       document.getElementById('aman-vault-body').classList.add('hidden');
       document.getElementById('btn-lock-vault').classList.add('hidden');
@@ -369,7 +435,6 @@
     async function unlockVaultFlow() {
       const ok = await verifyBiometric('ابصم للدخول إلى عملياتي وسجلي الخاص');
       if (!ok) return;
-      sessionUnlocked = true;
       await flushPendingToVault();
       const v = await readVault();
       document.getElementById('aman-vault-lock').classList.add('hidden');
@@ -397,5 +462,5 @@
     if (typeof lucide !== 'undefined') lucide.createIcons();
   }
 
-  window.addEventListener('load', () => setTimeout(initBioVault, 150));
+  window.addEventListener('load', () => setTimeout(initBioVault, 220));
 })();
