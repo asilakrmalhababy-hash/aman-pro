@@ -44,9 +44,9 @@
             { maxDim: 480, q: 0.56 }
           ]
         : [
-            { maxDim: 1080, q: 0.82 },
-            { maxDim: 900, q: 0.75 },
-            { maxDim: 760, q: 0.68 }
+            { maxDim: 1280, q: 0.86 },
+            { maxDim: 1080, q: 0.80 },
+            { maxDim: 920, q: 0.74 }
           ];
 
       let idx = 0;
@@ -102,7 +102,7 @@
         </div>
         <div class="grid grid-cols-2 gap-2 text-xs font-bold">
           <button type="button" id="itx-q-compact" class="p-2.5 rounded-xl border border-teal-500 bg-teal-500/15 text-teal-600 dark:text-teal-300 transition">واضحة (~12 ألف حرف)</button>
-          <button type="button" id="itx-q-clear" class="p-2.5 rounded-xl border border-slate-300 dark:border-slate-700 text-slate-500 transition">دقة HD (~35 ألف حرف)</button>
+          <button type="button" id="itx-q-clear" class="p-2.5 rounded-xl border border-slate-300 dark:border-slate-700 text-slate-500 transition">دقة HD عالية (~50 ألف حرف)</button>
         </div>
         <input id="itx-pass-e" type="password" class="w-full p-3 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-sm outline-none focus:border-teal-500" placeholder="كلمة سر لتشفير الصورة..." />
         <button type="button" id="itx-btn-enc" class="w-full py-3 rounded-xl bg-teal-600 hover:bg-teal-500 text-white font-bold text-sm transition">تشفير وتحويل الصورة إلى نص</button>
@@ -142,7 +142,7 @@
       qH.className = 'p-2.5 rounded-xl border border-slate-300 dark:border-slate-700 text-slate-500 transition';
     };
     qH.onclick = () => {
-      targetBytes = 28000;
+      targetBytes = 44000;
       qH.className = 'p-2.5 rounded-xl border border-teal-500 bg-teal-500/15 text-teal-600 dark:text-teal-300 transition';
       qC.className = 'p-2.5 rounded-xl border border-slate-300 dark:border-slate-700 text-slate-500 transition';
     };
