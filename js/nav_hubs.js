@@ -152,8 +152,9 @@
       }
     });
 
-    const toolsGroup = navRoot.querySelector('div:not(.hidden):last-of-type') || navRoot;
-    const insertAnchor = toolsGroup.querySelector('button:not(.hidden)');
+    const visibleGroups = Array.from(navRoot.children).filter(el => el.tagName === 'DIV' && !el.classList.contains('hidden'));
+    const toolsGroup = visibleGroups[visibleGroups.length - 1] || navRoot;
+    const insertAnchor = Array.from(toolsGroup.querySelectorAll('button')).find(b => !b.classList.contains('hidden')) || null;
 
     HUBS.forEach(hub => {
       const btn = document.createElement('button');
