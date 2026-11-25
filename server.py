@@ -84,9 +84,7 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             ip = self._client_ip()
             ua = (self.headers.get("User-Agent") or "").lower()
             uid, is_new = self._get_uid()
-            if ip not in ("127.0.0.1", "::1") and not any(b in ua for b in ("render", "go-http-client", "uptimerobot")):
-                dev = admin_store.detect_device(self.headers)
-                threading.Thread(target=admin_store.record_visit_or_action, args=(uid, ip, dev, "visits"), daemon=True).start()
+            pass
             self._pending_uid = uid if is_new else None
             return super().do_GET()
         return super().do_GET()
@@ -100,21 +98,32 @@ class Handler(http.server.SimpleHTTPRequestHandler):
 
     def do_POST(self):
         clean_path = self.path.split("?", 1)[0]
-        if clean_path in ("/api/admin/overview", "/api/admin/ban"):
+        if clean_path == "/api/track":
+            ln = int(self.headers.get("Content-Length", "0") or 0)
+            body = json.loads(self.rfile.read(ln).decode("utf-8", "ignore") or "{}") if ln > 0 else {}
+            ip = self._client_ip()
+            ua = self.headers.get("User-Agent") or ""
+            uid = str(body.get("uid") or self.headers.get("X-Aman-Uid") or "").strip()[:64]
+            tool = str(body.get("tool") or "visit").strip()[:40]
+            if uid and not admin_store.is_bot_request(ip, ua):
+                dev = admin_store.detect_device(self.headers)
+                threading.Thread(target=admin_store.track_user_event, args=(uid, ip, dev, tool), daemon=True).start()
+            return self._send_json(200, {"success": True})
+        if clean_path in ("/api/admin/overview", "/api/admin/ban", "/api/admin/reset"):
             ln = int(self.headers.get("Content-Length", "0") or 0)
             body = json.loads(self.rfile.read(ln).decode("utf-8", "ignore") or "{}") if ln > 0 else {}
             if not admin_store.verify_admin_pin(body.get("pin", "")):
                 return self._send_json(401, {"success": False, "error": "رمز الأدمن غير صحيح"})
             if clean_path == "/api/admin/ban":
                 admin_store.set_user_ban(str(body.get("user_id", "")), bool(body.get("banned", True)), str(body.get("reason", "")))
+            elif clean_path == "/api/admin/reset":
+                admin_store.reset_all_stats()
             return self._send_json(200, {"success": True, "data": admin_store.get_overview()})
         ip = self._client_ip()
         uid, _ = self._get_uid()
         if admin_store.is_user_banned_cached(uid):
             return self._send_json(403, {"success": False, "error": "تم حظر وصولك من قبل الإدارة."})
-        stat_f = "url_scans" if "url" in clean_path else ("hash_scans" if "hash" in clean_path else "visits")
-        dev = admin_store.detect_device(self.headers)
-        threading.Thread(target=admin_store.record_visit_or_action, args=(uid, ip, dev, stat_f), daemon=True).start()
+        pass
         ln = int(self.headers.get("Content-Length", 0))
         body = json.loads(self.rfile.read(ln) or b"{}")
         if self.path == "/api/scan-url":

@@ -22,35 +22,36 @@
         </div>
       </div>
       <div class="flex items-center gap-2">
-        <a href="/" class="px-3 py-1.5 rounded-xl text-xs font-bold bg-slate-800 hover:bg-slate-700 text-slate-200">الموقع الرئيسي</a>
-        <button id="btnLogout" class="hidden px-3 py-1.5 rounded-xl text-xs font-bold bg-rose-500/20 text-rose-300 hover:bg-rose-500/30">خروج</button>
+        <a href="/" class="px-3 py-1.5 rounded-xl text-xs font-bold bg-slate-800 hover:bg-slate-700 text-slate-200">الموقع</a>
+        <button id="btnLogout" class="hidden px-3 py-1.5 rounded-xl text-xs font-bold bg-rose-500/20 text-rose-300">خروج</button>
       </div>
     </header>
 
     <section id="loginBox" class="card rounded-3xl p-6 max-w-md mx-auto space-y-4 mt-8">
       <h2 class="text-lg font-extrabold text-center text-white">دخول المشرفين</h2>
-      <input id="pinInp" type="password" dir="ltr" placeholder="أدخل رمز الأدمن (الافتراضي: aman2026)" class="w-full p-3.5 rounded-2xl bg-[#071311] border border-teal-900/60 text-sm text-white outline-none focus:border-teal-400" />
+      <input id="pinInp" type="password" dir="ltr" placeholder="أدخل رمز الأدمن" class="w-full p-3.5 rounded-2xl bg-[#071311] border border-teal-900/60 text-sm text-white outline-none focus:border-teal-400" />
       <p id="loginErr" class="hidden text-xs font-bold text-rose-400 text-center"></p>
       <button id="btnLogin" class="w-full py-3 rounded-2xl bg-teal-600 hover:bg-teal-500 text-white font-bold text-sm transition">دخول</button>
     </section>
 
     <section id="dashBox" class="hidden space-y-5">
       <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        <div class="card rounded-2xl p-4"><div class="text-xs text-slate-400">إجمالي المستخدمين</div><div id="kTotal" class="text-2xl font-extrabold text-white mt-1">0</div></div>
+        <div class="card rounded-2xl p-4"><div class="text-xs text-slate-400">المستخدمون (فريدون)</div><div id="kTotal" class="text-2xl font-extrabold text-white mt-1">0</div></div>
         <div class="card rounded-2xl p-4"><div class="text-xs text-slate-400">نشطين (24 ساعة)</div><div id="kActive" class="text-2xl font-extrabold text-emerald-400 mt-1">0</div></div>
         <div class="card rounded-2xl p-4"><div class="text-xs text-slate-400">محظورين</div><div id="kBanned" class="text-2xl font-extrabold text-rose-400 mt-1">0</div></div>
-        <div class="card rounded-2xl p-4"><div class="text-xs text-slate-400">فحص الروابط والملفات</div><div id="kScans" class="text-2xl font-extrabold text-teal-300 mt-1">0</div></div>
+        <div class="card rounded-2xl p-4"><div class="text-xs text-slate-400">إجمالي العمليات</div><div id="kActions" class="text-2xl font-extrabold text-teal-300 mt-1">0</div></div>
       </div>
 
       <div class="card rounded-3xl p-5 space-y-4">
         <div class="flex items-center justify-between gap-2 flex-wrap">
-          <h2 class="text-base font-extrabold text-white">قائمة المستخدمين</h2>
-          <div class="flex items-center gap-2">
+          <h2 class="text-base font-extrabold text-white">المستخدمون (اضغط على أي مستخدم لعرض تفاصيله)</h2>
+          <div class="flex items-center gap-2 flex-wrap">
             <input id="searchInp" type="text" placeholder="بحث بالجهاز أو البلد أو IP..." class="px-3 py-1.5 rounded-xl bg-[#071311] border border-teal-900/60 text-xs text-white outline-none focus:border-teal-400" />
             <button id="btnRefresh" class="px-3 py-1.5 rounded-xl text-xs font-bold bg-teal-600 hover:bg-teal-500 text-white">تحديث ↻</button>
+            <button id="btnReset" class="px-3 py-1.5 rounded-xl text-xs font-bold bg-rose-500/20 text-rose-300 hover:bg-rose-500/30">تصفير الكل</button>
           </div>
         </div>
-        <div id="usersList" class="space-y-2.5"></div>
+        <div id="usersList" class="space-y-3"></div>
       </div>
     </section>
   </div>
@@ -58,51 +59,85 @@
   <script>
     let adminPin = sessionStorage.getItem('aman_admin_pin') || '';
     let allUsers = [];
+    let toolLabels = {};
+    const openDetails = new Set();
+
     function esc(s){return String(s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
     async function api(path, body){
-      const res = await fetch(path,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(Object.assign({},body||{},{pin:adminPin}))});
+      const res = await fetch(path,{method:'POST',cache:'no-store',headers:{'Content-Type':'application/json'},body:JSON.stringify(Object.assign({},body||{},{pin:adminPin}))});
       const j = await res.json();
       if(!res.ok || !j.success) throw new Error(j.error || 'خطأ في الاتصال');
       return j;
     }
+
     function renderUsers(){
       const q = (document.getElementById('searchInp').value||'').trim().toLowerCase();
       const box = document.getElementById('usersList');
       const list = allUsers.filter(u => !q || (u.device_name||'').toLowerCase().includes(q) || (u.country||'').toLowerCase().includes(q) || (u.ip_address||'').toLowerCase().includes(q) || (u.user_id||'').toLowerCase().includes(q));
-      if(!list.length){ box.innerHTML='<div class="text-center py-6 text-xs text-slate-400">لا يوجد مستخدمون مسجلون بعد.</div>'; return; }
+      if(!list.length){ box.innerHTML='<div class="text-center py-6 text-xs text-slate-400">لا يوجد مستخدمون مسجلون حالياً.</div>'; return; }
+
       box.innerHTML = list.map(u => {
         const banned = u.is_banned === 1;
-        return `<div class="p-3.5 rounded-2xl bg-[#071311] border border-teal-900/40 flex items-center justify-between gap-3">
-          <div class="min-w-0 flex-1 space-y-1">
-            <div class="flex items-center gap-2 flex-wrap">
-              <strong class="text-sm text-white">${esc(u.device_name||'جهاز')} — 🌍 ${esc(u.country||'غير محدد')}</strong>
-              <span class="px-2 py-0.5 rounded-lg text-[10px] font-bold ${banned?'bg-rose-500/20 text-rose-300':'bg-emerald-500/20 text-emerald-300'}">${banned?'محظور':'نشط'}</span>
+        const isOpen = openDetails.has(u.user_id);
+        const tools = u.tools || {};
+        const usedKeys = Object.keys(tools).filter(k => tools[k] > 0);
+        const toolsGrid = usedKeys.length
+          ? `<div class="grid grid-cols-2 gap-2">${usedKeys.map(k => `<div class="p-2.5 rounded-xl bg-[#0B1E1A] border border-teal-900/40 flex items-center justify-between text-xs"><span class="text-slate-300">${esc(toolLabels[k]||k)}</span><span class="font-extrabold text-teal-400 mono">${tools[k]}</span></div>`).join('')}</div>`
+          : '<div class="text-xs text-slate-400">تصفّح الموقع فقط ولم ينفّذ عمليات بعد.</div>';
+
+        return `<div class="rounded-2xl bg-[#071311] border border-teal-900/40 overflow-hidden">
+          <div class="p-4 flex items-center justify-between gap-3 cursor-pointer" data-toggle-u="${esc(u.user_id)}">
+            <div class="min-w-0 flex-1 space-y-1">
+              <div class="flex items-center gap-2 flex-wrap">
+                <strong class="text-sm text-white">${esc(u.device_name||'جهاز')} — 🌍 ${esc(u.country||'غير محدد')}</strong>
+                <span class="px-2 py-0.5 rounded-lg text-[10px] font-bold ${banned?'bg-rose-500/20 text-rose-300':'bg-emerald-500/20 text-emerald-300'}">${banned?'محظور':'نشط'}</span>
+              </div>
+              <div class="text-xs text-slate-400">إجمالي العمليات: <b class="text-teal-300">${u.actions_count||0}</b> • آخر ظهور: <span dir="ltr">${esc(u.last_seen)}</span></div>
+              <div class="text-[11px] text-slate-500 mono" dir="ltr">IP: ${esc(u.ip_address)} • ID: ${esc(u.user_id)}</div>
             </div>
-            <div class="text-xs text-slate-400">العمليات: <b class="text-slate-200">${u.actions_count||0}</b> • آخر ظهور: <span dir="ltr">${esc(u.last_seen)}</span></div>
-            <div class="text-[11px] text-slate-500 mono" dir="ltr">IP: ${esc(u.ip_address)} • ID: ${esc(u.user_id)}</div>
+            <button data-ban-uid="${esc(u.user_id)}" data-banned="${banned?'1':'0'}" class="shrink-0 px-3.5 py-2 rounded-xl text-xs font-bold whitespace-nowrap ${banned?'bg-slate-800 text-teal-300':'bg-rose-500/20 text-rose-300 hover:bg-rose-500/30'}">${banned?'فك الحظر':'حظر'}</button>
           </div>
-          <button data-ban-uid="${esc(u.user_id)}" data-banned="${banned?'1':'0'}" class="shrink-0 px-3.5 py-2 rounded-xl text-xs font-bold ${banned?'bg-slate-800 text-teal-300':'bg-rose-500/20 text-rose-300 hover:bg-rose-500/30'}">${banned?'فك الحظر':'حظر'}</button>
+          <div class="${isOpen?'':'hidden'} px-4 pb-4 pt-2 border-t border-teal-900/30 space-y-2.5">
+            <div class="flex items-center justify-between text-[11px] text-slate-400">
+              <span>أول دخول: <b dir="ltr">${esc(u.first_seen)}</b></span>
+              <span>التفصيل الدقيق للعمليات:</span>
+            </div>
+            ${toolsGrid}
+          </div>
         </div>`;
       }).join('');
+
+      box.querySelectorAll('[data-toggle-u]').forEach(row => {
+        row.onclick = (e) => {
+          if (e.target.closest('[data-ban-uid]')) return;
+          const uid = row.getAttribute('data-toggle-u');
+          if (openDetails.has(uid)) openDetails.delete(uid); else openDetails.add(uid);
+          renderUsers();
+        };
+      });
+
       box.querySelectorAll('[data-ban-uid]').forEach(btn => {
-        btn.onclick = async () => {
+        btn.onclick = async (e) => {
+          e.stopPropagation();
           const uid = btn.getAttribute('data-ban-uid'), isB = btn.getAttribute('data-banned')==='1';
           btn.disabled = true;
           try { const j = await api('/api/admin/ban',{user_id:uid,banned:!isB,reason:isB?'':'حظر من الإدارة'}); applyData(j.data); }
-          catch(e){ alert(e.message); }
+          catch(err){ alert(err.message); }
         };
       });
     }
+
     function applyData(d){
       document.getElementById('dbBadge').textContent = 'متصل بقاعدة: ' + (d.db_mode||'SQLite');
       document.getElementById('kTotal').textContent = d.total_users||0;
       document.getElementById('kActive').textContent = d.active_users||0;
       document.getElementById('kBanned').textContent = d.banned_users||0;
-      const st = d.stats||{};
-      document.getElementById('kScans').textContent = (st.url_scans||0)+(st.hash_scans||0);
+      document.getElementById('kActions').textContent = d.total_actions||0;
+      toolLabels = d.tool_labels || {};
       allUsers = d.users||[];
       renderUsers();
     }
+
     async function doLogin(){
       const err = document.getElementById('loginErr'); err.classList.add('hidden');
       adminPin = document.getElementById('pinInp').value.trim();
@@ -116,9 +151,14 @@
         applyData(j.data);
       }catch(e){ sessionStorage.removeItem('aman_admin_pin'); err.textContent=e.message; err.classList.remove('hidden'); }
     }
+
     document.getElementById('btnLogin').onclick = doLogin;
     document.getElementById('pinInp').addEventListener('keydown', e => { if(e.key==='Enter') doLogin(); });
     document.getElementById('btnRefresh').onclick = () => api('/api/admin/overview',{}).then(j=>applyData(j.data)).catch(e=>alert(e.message));
+    document.getElementById('btnReset').onclick = async () => {
+      if (!confirm('تصفير كل الإحصائيات والمستخدمين القدامى والبدء من الصفر؟')) return;
+      try { const j = await api('/api/admin/reset', {}); applyData(j.data); } catch(e){ alert(e.message); }
+    };
     document.getElementById('searchInp').oninput = renderUsers;
     document.getElementById('btnLogout').onclick = () => { sessionStorage.removeItem('aman_admin_pin'); location.reload(); };
     if(adminPin){ document.getElementById('pinInp').value=adminPin; doLogin(); }

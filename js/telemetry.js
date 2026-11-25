@@ -1,0 +1,66 @@
+(function () {
+  function getOrCreateUid() {
+    let uid = '';
+    try { uid = localStorage.getItem('aman_uid') || ''; } catch (_) {}
+    if (!uid) {
+      const m = document.cookie.match(/(?:^|;\s*)aman_uid=([^;]+)/);
+      if (m) uid = decodeURIComponent(m[1]);
+    }
+    if (!uid) uid = 'dev_' + Math.random().toString(16).slice(2, 12);
+    try { localStorage.setItem('aman_uid', uid); } catch (_) {}
+    const sec = location.protocol === 'https:' ? '; Secure' : '';
+    document.cookie = 'aman_uid=' + encodeURIComponent(uid) + '; path=/; max-age=31536000; SameSite=Lax' + sec;
+    return uid;
+  }
+
+  const UID = getOrCreateUid();
+
+  function track(toolKey) {
+    try {
+      fetch('/api/track', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-Aman-Uid': UID },
+        body: JSON.stringify({ uid: UID, tool: toolKey }),
+        keepalive: true
+      }).catch(() => {});
+    } catch (_) {}
+  }
+
+  if (!sessionStorage.getItem('aman_visit_sent')) {
+    sessionStorage.setItem('aman_visit_sent', '1');
+    track('visit');
+  }
+
+  function bindToolTracking() {
+    const map = [
+      ['#btn-phish-run', 'phish'],
+      ['#btn-priv-run', 'privacy_audit'],
+      ['#btn-exif-clean', 'exif'],
+      ['#stg-btn-hide', 'stego'],
+      ['#stg-btn-ext', 'stego']
+    ];
+    map.forEach(([sel, key]) => {
+      const el = document.querySelector(sel);
+      if (el && !el.dataset.trk) { el.dataset.trk = '1'; el.addEventListener('click', () => track(key)); }
+    });
+    const panelMap = { 'panel-url': 'url_scan', 'panel-file': 'file_scan', 'panel-crypto': 'crypto', 'panel-pass': 'password', 'panel-qr': 'qr', 'panel-secret': 'secret_link' };
+    Object.keys(panelMap).forEach(pid => {
+      const panel = document.getElementById(pid);
+      if (!panel) return;
+      panel.querySelectorAll('button').forEach(b => {
+        if (b.dataset.trk) return;
+        const tx = (b.textContent || '').trim();
+        if (/(فحص|تشفير|توليد|إنشاء|تحليل|scan|encrypt|decrypt|generate|create)/i.test(tx)) {
+          b.dataset.trk = '1';
+          b.addEventListener('click', () => track(panelMap[pid]));
+        }
+      });
+      if (pid === 'panel-file') {
+        const fi = panel.querySelector('input[type="file"]');
+        if (fi && !fi.dataset.trk) { fi.dataset.trk = '1'; fi.addEventListener('change', () => { if (fi.files && fi.files.length) track('file_scan'); }); }
+      }
+    });
+  }
+
+  window.addEventListener('load', () => setTimeout(bindToolTracking, 350));
+})();
