@@ -18,17 +18,35 @@
     'أدوات الأمان': 'Security Tools',
     'اختر أداة الفحص للتحقق من الروابط والملفات والرسائل المشبوهة.': 'Inspect suspicious URLs, files, and scam messages locally.',
     'حماية البيانات وتشفير النصوص والصور وتنظيف بيانات الكاميرا محلياً.': 'Encrypt text, hide secrets in images, and strip photo metadata locally.',
+    'اختر الطريقة المناسبة لإنشاء كلمة مرور قوية': 'Choose a method to generate a strong password',
+    'من حياتك': 'From Your Life',
+    'قوية جداً': 'Very Strong',
+    'قوية': 'Strong',
+    'متوسطة': 'Medium',
+    'ضعيفة': 'Weak',
+    'الوقت المقدر للكسر: قرون طويلة': 'Estimated crack time: Centuries',
+    'أحرف كبيرة (A-Z)': 'Uppercase (A-Z)',
+    'أحرف صغيرة (a-z)': 'Lowercase (a-z)',
+    'أرقام (0-9)': 'Numbers (0-9)',
+    'رموز (!@#$)': 'Symbols (!@#$)',
+    'إنشاء رابط سري مشفّر': 'Create Encrypted Secret Link',
+    'تُشفّر رسالتك في المتصفح وتُحفظ داخل الرابط نفسه بعد علامة # دون إرسالها لأي خادم.': 'Your message is encrypted locally inside the # link without touching any server.',
+    'توليد الرابط السري': 'Generate Secret Link',
+    'كلمة مرور (اختياري لزيادة الأمان)...': 'Optional password for extra security...',
+    'اكتب رسالتك السرية هنا...': 'Write your secret message here...',
+    'نسخ الرابط': 'Copy Link',
+    'مشاركة واتساب': 'Share on WhatsApp',
+    'مشاركة عبر واتساب': 'Share on WhatsApp',
     'اضغط لاختيار صورة لفحص وتنظيف بياناتها': 'Tap to pick a photo to inspect and clean metadata',
     'JPG, PNG, WebP — المعالجة داخل جهازك 100%': 'JPG, PNG, WebP — 100% local on-device processing',
     'تنظيف كل البيانات المخفية الآن': 'Clean All Hidden Metadata Now',
     'تحميل الصورة النظيفة': 'Download Clean Photo',
     'يقرأ البيانات السرية الحقيقية (نوع الجوال، وقت التصوير، موقع GPS) ويمسحها بالكامل محلياً.': 'Reads hidden metadata (device model, capture time, GPS) and strips it locally.',
     'تحليل الرسالة الآن': 'Analyze Message Now',
+    'الصق رسالة واتساب أو SMS المشبوهة هنا...': 'Paste the suspicious WhatsApp or SMS message here...',
     'تشغيل الكاميرا الحية': 'Start Live Camera',
     'إيقاف الكاميرا': 'Stop Camera',
-    'إنشاء الرابط السري': 'Create Secret Link',
-    'نسخ الرابط': 'Copy Link',
-    'مشاركة واتساب': 'Share on WhatsApp',
+    'مسح الباركود بالكاميرا الحية': 'Live Camera QR Scanner',
     'إخفاء النص داخل الصورة': 'Hide Text in Image',
     'استخراج النص من الصورة': 'Extract Text from Image',
     'تحميل الصورة': 'Download Image'
@@ -52,22 +70,17 @@
         node.nodeValue = raw.replace(trimmed, dict[trimmed]);
       }
     }
+    root.querySelectorAll('input[placeholder], textarea[placeholder]').forEach(el => {
+      const ph = (el.getAttribute('placeholder') || '').trim();
+      if (ph && dict[ph]) el.setAttribute('placeholder', dict[ph]);
+    });
   }
 
   function applyExtraTranslations() {
     const isEn = document.documentElement.lang === 'en' || document.documentElement.dir === 'ltr';
-    const targets = [
-      document.getElementById('sidebar'),
-      document.getElementById('page-title'),
-      document.getElementById('panel-hub-scan'),
-      document.getElementById('panel-hub-privacy'),
-      document.getElementById('panel-exif'),
-      document.getElementById('panel-stego'),
-      document.getElementById('panel-secret'),
-      document.getElementById('panel-phish'),
-      document.getElementById('panel-qr')
-    ];
-    targets.forEach(el => translateTree(el, isEn));
+    translateTree(document.getElementById('sidebar'), isEn);
+    translateTree(document.getElementById('page-title'), isEn);
+    translateTree(document.querySelector('main'), isEn);
   }
 
   function initNavHubs() {
